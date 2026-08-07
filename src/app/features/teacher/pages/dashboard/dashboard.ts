@@ -31,42 +31,42 @@ export class Dashboard {
   readonly courses = this.courseService.courses;
   sessionCreated = signal<ClassSession | null>(null);
 
-async startSession(course: Course) {
+  async startSession(course: Course) {
 
-  const user = this.auth.currentUser();
+    const user = this.auth.currentUser();
 
-  if (!user) {
-    return;
+    if (!user) {
+      return;
+    }
+
+    const session = await this.sessionService.createSession(
+      course.id,
+      user.uid
+    );
+
+    this.sessionCreated.set(session);
+
   }
 
-  const session = await this.sessionService.createSession(
-    course.id,
-    user.uid
-  );
+  enterSession() {
 
-  this.sessionCreated.set(session);
+    const session = this.sessionCreated();
 
-}
+    if (!session) {
+      return;
+    }
 
-enterSession() {
+    this.router.navigate([
+      '/teacher/session',
+      session.id
+    ]);
 
-  const session = this.sessionCreated();
-
-  if (!session) {
-    return;
   }
 
-  this.router.navigate([
-    '/teacher/session',
-    session.id
-  ]);
+  closeDialog() {
 
-}
+    this.sessionCreated.set(null);
 
-closeDialog() {
-
-  this.sessionCreated.set(null);
-
-}
+  }
 
 }

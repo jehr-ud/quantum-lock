@@ -33,6 +33,7 @@ export class SeedService {
         console.log("🌱 Running seeds...");
 
         await this.seedCourses();
+        await this.seedConfig();
 
         console.log("✅ Seeds completed");
 
@@ -71,6 +72,58 @@ export class SeedService {
         }
 
         console.log('Seed finalizado');
+    }
+
+    async seedConfig() {
+
+        console.log('Iniciando seed de configuración');
+
+        try {
+
+            const ref = doc(
+
+                firestore,
+
+                Collections.SETTINGS,
+
+                'application'
+
+            );
+
+            const snapshot = await getDoc(ref);
+
+            console.log('Existe:', snapshot.exists());
+
+            if (snapshot.exists()) {
+
+                console.log('Configuración ya existe');
+
+                return;
+
+            }
+
+            await setDoc(
+
+                ref,
+
+                SEED.config
+
+            );
+
+            console.log('Configuración creada');
+
+        } catch (e) {
+
+            console.error(
+
+                'Error creando configuración',
+
+                e
+
+            );
+
+        }
+
     }
 
 }

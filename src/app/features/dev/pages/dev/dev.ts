@@ -33,6 +33,24 @@ export class Dev {
 
   }
 
+  async seedConfig() {
+
+    this.loading.set(true);
+
+    try {
+
+      await this.seedService.seedCourses();
+
+      alert('Configuración creada.');
+
+    } finally {
+
+      this.loading.set(false);
+
+    }
+
+  }
+
   async seedEverything() {
 
     this.loading.set(true);

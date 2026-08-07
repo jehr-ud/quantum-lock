@@ -71,11 +71,11 @@ export class Login {
       switch (user.role) {
 
         case UserRole.TEACHER:
-          await this.router.navigate(['/teacher']);
+          await this.router.navigate(['/teacher/dashboard']);
           break;
 
         case UserRole.STUDENT:
-          await this.router.navigate(['/student']);
+          await this.router.navigate(['/student/dashboard']);
           break;
 
         default:

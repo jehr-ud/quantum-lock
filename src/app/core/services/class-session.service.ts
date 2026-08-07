@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 
 import {
   collection,
@@ -10,19 +10,19 @@ import {
 } from 'firebase/firestore';
 
 import { firestore } from '../firebase/firebase';
-
 import { Collections } from '../constants/firestore.collections';
-
 import { ClassSession } from '../../models/class-session';
 import { QuantumLock } from '../../models/quantum-lock';
 import { QuantumDirection } from '../enums/quantum-direction';
-
 import { SessionStatus } from '../enums/session-status';
+import { ConfigService } from './config.service';
+
 
 @Injectable({
   providedIn: 'root'
 })
 export class ClassSessionService {
+  private readonly config = inject(ConfigService);
   readonly session = signal<ClassSession | null>(null);
   private readonly directions: QuantumDirection[] = [
 
@@ -61,8 +61,7 @@ export class ClassSessionService {
 
   async createSession(
     courseId: string,
-    teacherUid: string,
-    duration = 30
+    teacherUid: string
   ): Promise<ClassSession> {
 
     const ref = doc(
@@ -71,6 +70,8 @@ export class ClassSessionService {
         Collections.CLASS_SESSIONS
       )
     );
+
+    const durationSeconds = this.config.config()?.sessionDurationSeconds ?? 30;
 
     const session: ClassSession = {
 
@@ -82,7 +83,7 @@ export class ClassSessionService {
 
       quantumLock: this.generateQuantumLock(),
 
-      duration,
+      durationSeconds,
 
       status: SessionStatus.ACTIVE,
 
@@ -90,7 +91,7 @@ export class ClassSessionService {
 
       expiresAt: Timestamp.fromDate(
         new Date(
-          Date.now() + duration * 60 * 1000
+          Date.now() + durationSeconds * 1000
         )
       )
 
@@ -102,14 +103,6 @@ export class ClassSessionService {
     );
 
     return session;
-
-  }
-
-  private generateAccessCode(): string {
-
-    return Math.floor(
-      100000 + Math.random() * 900000
-    ).toString();
 
   }
 
@@ -138,13 +131,5 @@ private randomDirection(): QuantumDirection {
   ];
 
 }
-
-  private randomAngle(): number {
-
-    return Math.floor(
-      Math.random() * 360
-    );
-
-  }
 
 }

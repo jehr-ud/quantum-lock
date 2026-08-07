@@ -35,10 +35,27 @@
 
         <div class="field">
 
-            <label>Correo institucional</label>
+            <label>
 
-            <input type="email" [ngModel]="email()" (ngModelChange)="email.set($event)"
-                placeholder="usuario@udistrital.edu.co">
+                Usuario institucional
+
+            </label>
+
+            <div class="email-input">
+
+                <input
+                    type="text"
+                    [ngModel]="username()"
+                    (ngModelChange)="username.set($event.toLowerCase().trim())"
+                    placeholder="jhernandez">
+
+                <span>
+
+                    @udistrital.edu.co
+
+                </span>
+
+            </div>
 
         </div>
 

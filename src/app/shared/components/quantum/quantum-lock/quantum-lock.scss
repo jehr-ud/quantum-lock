@@ -48,30 +48,34 @@ svg {
 
 }
 
-.ring {
+.point{
 
-    fill: #f8fafc;
-
-    stroke: #cbd5e1;
-
-    stroke-width: 3;
+    fill:#cbd5e1;
 
 }
 
-.center {
+.needle{
 
-    fill: #4338ca;
+    stroke:#4f46e5;
+
+    stroke-width:6;
+
+    stroke-linecap:round;
 
 }
 
-.needle {
+.center{
 
-    stroke: #4338ca;
+    fill:#4f46e5;
 
-    stroke-width: 6;
+}
 
-    stroke-linecap: round;
+.ring{
 
-    transition: transform .35s ease;
+    fill:#ffffff;
+
+    stroke:#d1d5db;
+
+    stroke-width:3;
 
 }

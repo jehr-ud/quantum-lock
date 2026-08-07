@@ -2,56 +2,40 @@
 
     @for(rotation of rotations(); track $index){
 
-        <div class="dial">
+    <div class="dial">
 
-            <svg
-                viewBox="0 0 120 120">
+        <svg viewBox="0 0 120 120">
 
-                <circle
+            <!-- círculo -->
 
-                    cx="60"
+            <circle cx="60" cy="60" r="46" class="ring" />
 
-                    cy="60"
+            <!-- posiciones -->
 
-                    r="46"
+            <circle cx="60" cy="12" r="3" class="point" />
+            <circle cx="94" cy="26" r="3" class="point" />
+            <circle cx="108" cy="60" r="3" class="point" />
+            <circle cx="94" cy="94" r="3" class="point" />
+            <circle cx="60" cy="108" r="3" class="point" />
+            <circle cx="26" cy="94" r="3" class="point" />
+            <circle cx="12" cy="60" r="3" class="point" />
+            <circle cx="26" cy="26" r="3" class="point" />
 
-                    class="ring">
+            <!-- aguja -->
 
-                </circle>
+            <line x1="60" y1="60" x2="60" y2="20" class="needle" [attr.transform]="
+            'rotate(' + rotation + ' 60 60)'
+            ">
 
-                <circle
+            </line>
 
-                    cx="60"
+            <!-- centro -->
 
-                    cy="60"
+            <circle cx="60" cy="60" r="6" class="center" />
 
-                    r="5"
+        </svg>
 
-                    class="center">
-
-                </circle>
-
-                <line
-
-                    x1="60"
-
-                    y1="60"
-
-                    x2="60"
-
-                    y2="20"
-
-                    class="needle"
-
-                    [attr.transform]="
-                    'rotate(' + rotation + ' 60 60)'
-                    ">
-
-                </line>
-
-            </svg>
-
-        </div>
+    </div>
 
     }
 

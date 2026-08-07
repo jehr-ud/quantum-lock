@@ -1,8 +1,9 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
+import { AppConfig } from '../../../../core/config/app.config';
 import { UserRole } from '../../../../core/enums/user-role';
 import { AuthService } from '../../../../core/services/auth.service';
 
@@ -24,28 +25,28 @@ export class Register {
 
   readonly firstName = signal('');
   readonly lastName = signal('');
-  readonly email = signal('');
+  readonly username = signal('');
   readonly password = signal('');
   readonly confirmPassword = signal('');
-
+  readonly defaultDomain = AppConfig.allowedDomains[0];
+  
   readonly loading = signal(false);
   readonly error = signal('');
+
+  readonly email = computed(() => {
+
+    const username = this.username().trim().toLowerCase();
+
+    return username
+      ? `${username}@${this.defaultDomain}`
+      : '';
+
+  });
+
 
   async register() {
 
     this.error.set('');
-
-    const email = this.email().trim().toLowerCase();
-
-    if (!email.endsWith('@udistrital.edu.co')) {
-
-      this.error.set(
-        'Debes utilizar un correo institucional.'
-      );
-
-      return;
-
-    }
 
     if (this.password().length < 6) {
 
@@ -74,7 +75,7 @@ export class Register {
       const user = await this.auth.register(
         this.firstName(),
         this.lastName(),
-        email,
+        this.email(),
         this.password()
       );
 

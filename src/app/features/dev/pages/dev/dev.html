@@ -10,7 +10,19 @@
 
         </p>
 
+       
+
         <button
+
+            (click)="seedConfig()"
+
+            [disabled]="loading()">
+
+            🌱 Crear Configuración
+
+        </button>
+
+         <button
 
             (click)="seedCourses()"
 
@@ -19,7 +31,7 @@
             🌱 Crear cursos
 
         </button>
-
+        
         <button
 
             (click)="seedEverything()"

@@ -19,6 +19,6 @@ export interface ClassSession {
 
   expiresAt: Timestamp | FieldValue;
 
-  duration: number;
+  durationSeconds: number;
 
 }
