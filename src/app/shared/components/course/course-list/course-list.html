@@ -1,0 +1,45 @@
+@if(courses().length){
+
+<div class="grid">
+
+    @for(course of courses(); track course.id){
+
+        <app-course-card
+
+            [course]="course"
+
+            [actionText]="actionText()"
+
+            (action)="action.emit($event)">
+
+        </app-course-card>
+
+    }
+
+</div>
+
+}@else{
+
+<div class="empty">
+
+    <div class="icon">
+
+        📚
+
+    </div>
+
+    <h2>
+
+        No hay cursos disponibles
+
+    </h2>
+
+    <p>
+
+        Cuando tengas cursos asignados aparecerán aquí.
+
+    </p>
+
+</div>
+
+}

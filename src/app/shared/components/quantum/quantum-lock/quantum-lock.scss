@@ -1,0 +1,77 @@
+:host {
+
+    display: block;
+
+}
+
+.lock {
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    gap: 24px;
+
+    flex-wrap: wrap;
+
+}
+
+.dial {
+
+    width: 110px;
+
+    height: 110px;
+
+    border-radius: 50%;
+
+    background: white;
+
+    box-shadow: 0 8px 20px rgba(15, 23, 42, .08);
+
+    transition: .25s;
+
+}
+
+.dial:hover {
+
+    transform: translateY(-4px);
+
+}
+
+svg {
+
+    width: 100%;
+
+    height: 100%;
+
+}
+
+.ring {
+
+    fill: #f8fafc;
+
+    stroke: #cbd5e1;
+
+    stroke-width: 3;
+
+}
+
+.center {
+
+    fill: #4338ca;
+
+}
+
+.needle {
+
+    stroke: #4338ca;
+
+    stroke-width: 6;
+
+    stroke-linecap: round;
+
+    transition: transform .35s ease;
+
+}

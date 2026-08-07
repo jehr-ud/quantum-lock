@@ -1,0 +1,58 @@
+<div class="lock">
+
+    @for(rotation of rotations(); track $index){
+
+        <div class="dial">
+
+            <svg
+                viewBox="0 0 120 120">
+
+                <circle
+
+                    cx="60"
+
+                    cy="60"
+
+                    r="46"
+
+                    class="ring">
+
+                </circle>
+
+                <circle
+
+                    cx="60"
+
+                    cy="60"
+
+                    r="5"
+
+                    class="center">
+
+                </circle>
+
+                <line
+
+                    x1="60"
+
+                    y1="60"
+
+                    x2="60"
+
+                    y2="20"
+
+                    class="needle"
+
+                    [attr.transform]="
+                    'rotate(' + rotation + ' 60 60)'
+                    ">
+
+                </line>
+
+            </svg>
+
+        </div>
+
+    }
+
+</div>

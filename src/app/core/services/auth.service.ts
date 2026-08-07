@@ -1,8 +1,9 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, computed, signal } from '@angular/core';
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword
 } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
 
 import {
   getDoc,
@@ -22,8 +23,41 @@ import { User } from '../../models/user';
   providedIn: 'root'
 })
 export class AuthService {
+  constructor() {
+
+    onAuthStateChanged(auth, async firebaseUser => {
+
+      if (!firebaseUser) {
+
+        this.currentUser.set(null);
+
+        return;
+
+      }
+
+      const user = await this.getUser(firebaseUser.uid);
+
+      this.currentUser.set(user);
+
+    });
+
+  }
 
   loading = signal(false);
+
+  readonly currentUser = signal<User | null>(null);
+
+  readonly isAuthenticated = computed(
+    () => this.currentUser() !== null
+  );
+
+  readonly isTeacher = computed(
+    () => this.currentUser()?.role === UserRole.TEACHER
+  );
+
+  readonly isStudent = computed(
+    () => this.currentUser()?.role === UserRole.STUDENT
+  );
 
   async login(
     email: string,
@@ -43,7 +77,14 @@ export class AuthService {
       }
     );
 
-    return this.getUser(credential.user.uid);
+
+    const user = await this.getUser(
+      credential.user.uid
+    );
+
+    this.currentUser.set(user);
+
+    return user;
 
   }
 
@@ -83,6 +124,8 @@ export class AuthService {
       user
 
     );
+
+    this.currentUser.set(user);
 
     return user;
 

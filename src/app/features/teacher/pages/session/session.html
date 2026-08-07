@@ -1,0 +1,148 @@
+@if (session(); as currentSession) {
+
+<div class="page">
+
+    <header>
+
+        <div>
+
+            <h1>
+
+                Sesión activa
+
+            </h1>
+
+            <small>
+
+                ID: {{ currentSession.id }}
+
+            </small>
+
+        </div>
+
+        <span class="status">
+
+            🟢 {{ currentSession.status }}
+
+        </span>
+
+    </header>
+
+    <div class="content">
+
+        <section class="card quantum-card">
+
+            <h2>
+
+                Quantum Lock
+
+            </h2>
+
+            <p>
+
+                Los estudiantes deben reproducir este patrón para registrar su asistencia.
+
+            </p>
+
+            <app-quantum-lock
+
+                [lock]="currentSession.quantumLock">
+
+            </app-quantum-lock>
+
+        </section>
+
+        <section class="card info-card">
+
+            <div class="info">
+
+                <span>
+
+                    Estado
+
+                </span>
+
+                <strong>
+
+                    {{ currentSession.status }}
+
+                </strong>
+
+            </div>
+
+            <div class="info">
+
+                <span>
+
+                    Duración
+
+                </span>
+
+                <strong>
+
+                    {{ currentSession.duration }} min
+
+                </strong>
+
+            </div>
+
+            <div class="info">
+
+                <span>
+
+                    Tiempo restante
+
+                </span>
+
+                <strong class="timer">
+
+                    {{ timer() }}
+
+                </strong>
+
+            </div>
+
+            <div class="info">
+
+                <span>
+
+                    Estudiantes conectados
+
+                </span>
+
+                <strong>
+
+                    0
+
+                </strong>
+
+            </div>
+
+            <button
+                class="finish">
+
+                Finalizar sesión
+
+            </button>
+
+        </section>
+
+    </div>
+
+</div>
+
+} @else {
+
+<div class="loading">
+
+    <div class="spinner"></div>
+
+    <h2>
+
+        Cargando sesión...
+
+    </h2>
+
+</div>
+
+}

@@ -1,1 +1,35 @@
-<p>dashboard works!</p>
+<div class="dashboard">
+
+    <app-course-header
+
+        title="Mis cursos"
+
+        subtitle="Selecciona un curso para iniciar una nueva sesión.">
+
+    </app-course-header>
+
+    <app-course-list
+
+        [courses]="courses()"
+
+        actionText="Iniciar clase"
+
+        (action)="startSession($event)">
+
+    </app-course-list>
+
+</div>
+
+@if(sessionCreated(); as session){
+
+    <app-session-created-dialog
+
+        [session]="session"
+
+        (enter)="enterSession()"
+
+        (close)="closeDialog()">
+
+    </app-session-created-dialog>
+
+}

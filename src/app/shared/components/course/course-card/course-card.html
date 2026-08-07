@@ -1,0 +1,41 @@
+<div class="course-card">
+
+    <div class="course-header">
+
+        <div class="course-icon">
+
+            📚
+
+        </div>
+
+        <div class="course-info">
+
+            <h2>
+
+                {{ course().name }}
+
+            </h2>
+
+            <span>
+
+                {{ course().code }}
+
+            </span>
+
+        </div>
+
+    </div>
+
+    <div class="course-footer">
+
+        <button
+            type="button"
+            (click)="onAction()">
+
+            {{ actionText() }}
+
+        </button>
+
+    </div>
+
+</div>
