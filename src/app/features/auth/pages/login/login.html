@@ -1,0 +1,80 @@
+<div class="login-container">
+
+    <div class="card">
+
+        <div class="logo">
+
+            ⚛️
+
+        </div>
+
+        <h1>Quantum Lock</h1>
+
+        <p class="subtitle">
+
+            Plataforma inteligente para el control de asistencia.
+
+        </p>
+
+        <div class="field">
+
+            <label>Correo institucional</label>
+
+            <div class="email-input">
+
+                <input type="text" [ngModel]="username()" (ngModelChange)="username.set($event)"
+                    placeholder="jhernandezh">
+
+                <span>@{{ defaultDomain }}</span>
+
+            </div>
+
+        </div>
+
+        <div class="field">
+
+            <label>Contraseña</label>
+
+            <input type="password" placeholder="••••••••" [ngModel]="password()" (ngModelChange)="password.set($event)">
+
+        </div>
+
+        @if(error()){
+
+        <div class="error">
+
+            {{ error() }}
+
+        </div>
+
+        }
+
+        <button (click)="continue()" [disabled]="loading()">
+
+            @if(loading()){
+
+            Entrando...
+
+            } @else {
+
+            Entrar
+
+            }
+
+        </button>
+
+        <div class="help">
+
+            <span>¿Es tu primera vez? </span>
+
+            <a class="register-link" routerLink="/register">
+
+                Crear una cuenta
+
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
