@@ -1,1 +1,21 @@
-<p>dashboard works!</p>
+<div class="page">
+
+    <app-course-header
+
+        title="Mis cursos"
+
+        subtitle="Completa el Quantum Lock para registrar tu asistencia.">
+
+    </app-course-header>
+
+    <app-course-list
+
+        [courses]="courses()"
+        actionText="Comenzar"
+        (action)="openCourse($event)"
+        secondaryActionText="🕷️ Álbum"
+        (secondaryAction)="openAlbum($event)">
+
+    </app-course-list>
+
+</div>

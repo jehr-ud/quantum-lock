@@ -5,13 +5,11 @@
     @for(course of courses(); track course.id){
 
         <app-course-card
-
             [course]="course"
-
             [actionText]="actionText()"
-
-            (action)="action.emit($event)">
-
+            (action)="action.emit($event)"
+            [secondaryActionText]="secondaryActionText()"
+            (secondaryAction)="secondaryAction.emit($event)">
         </app-course-card>
 
     }

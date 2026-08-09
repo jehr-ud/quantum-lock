@@ -3,6 +3,7 @@ export const Collections = {
   USERS: 'users',
   COURSES: 'courses',
   CLASS_SESSIONS:"class-sessions",
-  SETTINGS: 'settings'
+  SETTINGS: 'settings',
+  ATTENDANCES: 'attendances',
 
 } as const;

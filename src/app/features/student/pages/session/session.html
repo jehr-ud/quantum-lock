@@ -1,0 +1,166 @@
+@if(loading()){
+
+<div class="loading">
+
+    <div class="spinner"></div>
+
+    <h2>
+
+        Cargando sesión...
+
+    </h2>
+
+</div>
+
+}@else if(!session()){
+
+<div class="empty">
+
+    <div class="icon">
+
+        ⏳
+
+    </div>
+
+    <h2>
+
+        No hay una sesión activa
+
+    </h2>
+
+    <p>
+
+        Tu profesor aún no ha iniciado una sesión para este curso.
+
+    </p>
+
+</div>
+
+}@else{
+
+<header>
+
+    <div>
+
+        <h1>
+
+            Quantum Lock
+
+        </h1>
+
+        <small>
+
+            Completa el patrón antes de que termine el tiempo.
+
+        </small>
+
+    </div>
+
+    <span class="status">
+
+        ● {{ session()!.status }}
+
+    </span>
+
+</header>
+
+<section class="information">
+
+    <div class="info">
+
+        <span>
+
+            Estado
+
+        </span>
+
+        <strong>
+
+            {{ session()!.status }}
+
+        </strong>
+
+    </div>
+
+    <div class="info">
+
+        <span>
+
+            Duración
+
+        </span>
+
+        <strong>
+
+            {{ session()!.durationSeconds }} segundos
+
+        </strong>
+
+    </div>
+
+    <div class="info">
+
+        <span>
+
+            Tiempo restante
+
+        </span>
+
+        <strong class="timer" [class.warning]="timerClass() === 'warning'" [class.danger]="timerClass() === 'danger'">
+
+            {{ timer() }}
+
+        </strong>
+
+    </div>
+
+</section>
+
+<section class="instructions">
+
+    <h3>
+
+        🔐 Reproduce el patrón
+
+    </h3>
+
+    <p>
+
+        Haz clic sobre cada aguja para girarla en sentido horario.
+
+        Usa clic derecho para girarla en sentido contrario.
+
+    </p>
+
+</section>
+
+<section class="lock" [class.shake]="shaking()">
+
+    <app-quantum-lock [lock]="session()!.quantumLock" [interactive]="true" (solved)="solved()" (failed)="failed()">
+
+    </app-quantum-lock>
+
+</section>
+
+@if(error()){
+
+<div class="error">
+
+    ❌ {{error()}}
+
+</div>
+
+}
+
+<section class="footer">
+
+    <p>
+
+        ✔ Cuando todas las agujas coincidan con el patrón,
+        tu asistencia será registrada automáticamente.
+
+    </p>
+
+</section>
+
+}

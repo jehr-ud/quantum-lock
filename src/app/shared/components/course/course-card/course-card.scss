@@ -137,3 +137,58 @@ button:active {
     transform: scale(.98);
 
 }
+
+.actions {
+
+    display: flex;
+
+    gap: 12px;
+
+    align-items: center;
+
+}
+
+.actions {
+
+    margin-top: 5%;
+    display: flex;
+
+    gap: 12px;
+
+    align-items: center;
+
+}
+
+@media (max-width: 500px) {
+
+    .actions {
+
+        flex-direction: column;
+
+        width: 100%;
+
+    }
+
+    .actions button {
+
+        width: 100%;
+
+    }
+
+}
+
+.secondary {
+
+    background: transparent;
+
+    border: 1px solid #2563eb;
+
+    color: #2563eb;
+
+}
+
+.secondary:hover {
+
+    background: #eff6ff;
+
+}

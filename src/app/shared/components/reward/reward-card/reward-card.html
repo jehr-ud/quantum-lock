@@ -1,0 +1,59 @@
+<div
+
+    class="scene"
+
+    (click)="flip()">
+
+    <div
+
+        class="card"
+
+        [class.flipped]="flipped()">
+
+        <div class="face back">
+
+            <div class="logo">
+
+                ⚛️
+
+            </div>
+
+            <small>
+
+                Quantum Lock
+
+            </small>
+
+        </div>
+
+        <div class="face front">
+
+            <div
+
+                class="emoji">
+
+                {{emoji()}}
+
+            </div>
+
+            <h2>
+
+                {{title()}}
+
+            </h2>
+
+            <span
+
+                class="rarity"
+
+                [style.background]="rarityColor()">
+
+                {{rarity()}}
+
+            </span>
+
+        </div>
+
+    </div>
+
+</div>

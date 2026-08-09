@@ -2,36 +2,29 @@
 
     @for(rotation of rotations(); track $index){
 
-    <div class="dial">
+    <div class="dial" [class.interactive]="interactive()" (click)="rotateClockwise($index)" (contextmenu)="rotateCounterClockwise($index, $event)">
 
         <svg viewBox="0 0 120 120">
 
-            <!-- círculo -->
+            <circle cx="60" cy="60" r="46" class="ring">
 
-            <circle cx="60" cy="60" r="46" class="ring" />
+            </circle>
 
-            <!-- posiciones -->
+            <circle cx="60" cy="60" r="5" class="center">
 
-            <circle cx="60" cy="12" r="3" class="point" />
-            <circle cx="94" cy="26" r="3" class="point" />
-            <circle cx="108" cy="60" r="3" class="point" />
-            <circle cx="94" cy="94" r="3" class="point" />
-            <circle cx="60" cy="108" r="3" class="point" />
-            <circle cx="26" cy="94" r="3" class="point" />
-            <circle cx="12" cy="60" r="3" class="point" />
-            <circle cx="26" cy="26" r="3" class="point" />
-
-            <!-- aguja -->
+            </circle>
 
             <line x1="60" y1="60" x2="60" y2="20" class="needle" [attr.transform]="
-            'rotate(' + rotation + ' 60 60)'
-            ">
+                    'rotate(' + rotation + ' 60 60)'
+                ">
 
             </line>
 
-            <!-- centro -->
+            <text x="60" y="108" text-anchor="middle" class="degrees">
 
-            <circle cx="60" cy="60" r="6" class="center" />
+                {{ rotation }}°
+
+            </text>
 
         </svg>
 

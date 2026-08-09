@@ -1,13 +1,13 @@
 import { FieldValue, Timestamp } from 'firebase/firestore';
 
 export interface Attendance {
-
-    uid: string;
-
+    id: string;
     sessionId: string;
-
-    joinedAt: Timestamp | FieldValue;
-
-    validatedAt: Timestamp | FieldValue;
-
+    courseId: string;
+    studentUid: string;
+    registeredAt: Timestamp | FieldValue;
+    rewardId: string;
+    rewardClaimed: boolean;
+    solved: boolean;
+    attempts: number;
 }

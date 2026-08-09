@@ -1,0 +1,174 @@
+:host{
+
+    display:block;
+
+    max-width:900px;
+
+    margin:auto;
+
+    padding:40px;
+
+}
+
+header{
+
+    text-align:center;
+
+    margin-bottom:32px;
+
+}
+
+header h1{
+
+    margin-bottom:8px;
+
+}
+
+header p{
+
+    color:#6b7280;
+
+}
+
+.lock{
+
+    display:flex;
+
+    justify-content:center;
+
+    margin-top:40px;
+
+}
+
+.loading,
+
+.empty{
+
+    text-align:center;
+
+    padding:80px 16px;
+
+}
+
+.icon{
+
+    font-size:64px;
+
+    margin-bottom:20px;
+
+}
+
+.empty h2{
+
+    margin-bottom:8px;
+
+}
+
+.empty p{
+
+    color:#6b7280;
+
+}
+
+.timer{
+
+    font-size:1.5rem;
+
+    font-weight:700;
+
+}
+
+.timer.warning{
+
+    color:#f59e0b;
+
+}
+
+.timer.danger{
+
+    color:#dc2626;
+
+    animation:pulse 1s infinite;
+
+}
+
+@keyframes pulse{
+
+    0%{
+
+        transform:scale(1);
+
+    }
+
+    50%{
+
+        transform:scale(1.08);
+
+    }
+
+    100%{
+
+        transform:scale(1);
+
+    }
+
+}
+
+
+.error{
+
+    margin-top:24px;
+
+    text-align:center;
+
+    color:#dc2626;
+
+    font-weight:700;
+
+}
+
+.shake{
+
+    animation:shake .5s;
+
+}
+
+@keyframes shake{
+
+    0%{
+
+        transform:translateX(0);
+
+    }
+
+    20%{
+
+        transform:translateX(-10px);
+
+    }
+
+    40%{
+
+        transform:translateX(10px);
+
+    }
+
+    60%{
+
+        transform:translateX(-8px);
+
+    }
+
+    80%{
+
+        transform:translateX(8px);
+
+    }
+
+    100%{
+
+        transform:translateX(0);
+
+    }
+
+}

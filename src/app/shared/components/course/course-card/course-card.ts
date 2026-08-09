@@ -17,6 +17,12 @@ export class CourseCard {
 
   readonly action = output<Course>();
 
+  readonly secondaryActionText =
+    input<string | null>(null);
+
+  readonly secondaryAction =
+    output<Course>();
+
   onAction(): void {
 
     this.action.emit(this.course());

@@ -26,7 +26,7 @@
 
     </div>
 
-    <div class="course-footer">
+   <div class="actions">
 
         <button
             type="button"
@@ -35,6 +35,18 @@
             {{ actionText() }}
 
         </button>
+
+        @if(secondaryActionText()){
+
+            <button
+                class="secondary"
+                (click)="secondaryAction.emit(course())">
+
+                {{ secondaryActionText() }}
+
+            </button>
+
+        }
 
     </div>
 

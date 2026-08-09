@@ -1,0 +1,157 @@
+@if(loading()){
+
+<div class="container loading">
+
+    <div class="spinner">
+        ⏳
+    </div>
+
+    <h2>
+
+        Cargando tu sobre...
+
+    </h2>
+
+    <p>
+
+        Estamos preparando tu recompensa.
+
+    </p>
+
+</div>
+
+}@else if(error()){
+
+<div class="container empty">
+
+    <div class="icon">
+
+        🔒
+
+    </div>
+
+    <h2>
+
+        Sobre no disponible
+
+    </h2>
+
+    <p>
+
+        {{ error() }}
+
+    </p>
+
+    <button
+        class="primary"
+        routerLink="/student/dashboard">
+
+        Volver al dashboard
+
+    </button>
+
+</div>
+
+}@else if(!opened()){
+
+<div class="container">
+
+    <div class="envelope">
+
+        ✉️
+
+    </div>
+
+    <h1>
+
+        ¡Sobre desbloqueado!
+
+    </h1>
+
+    <p>
+
+        Completaste correctamente el Quantum Lock.
+
+    </p>
+
+    <p>
+
+        Tu recompensa está esperando dentro.
+
+    </p>
+
+    <button
+
+        class="primary"
+
+        [disabled]="!canOpen()"
+
+        (click)="open()">
+
+        Abrir sobre
+
+    </button>
+
+</div>
+
+}@else{
+
+<div class="container">
+
+    <div class="confetti">
+
+        🎉
+
+    </div>
+
+    @if(alreadyClaimed()){
+
+    <h2>
+
+        ¡Recompensa obtenida!
+
+    </h2>
+
+    }@else{
+
+    <h2>
+
+        ¡Nueva recompensa!
+
+    </h2>
+
+    }
+
+    <p>
+
+        Esta es la ficha que obtuviste en la sesión.
+
+    </p>
+
+    @if(reward()){
+
+    <app-reward-card
+
+        [title]="reward()!.title"
+
+        [emoji]="reward()!.emoji"
+
+        [rarity]="reward()!.rarity">
+
+    </app-reward-card>
+
+    }
+
+    <button
+
+        class="primary"
+
+        routerLink="/student/dashboard">
+
+        Ir al dasboard
+
+    </button>
+
+</div>
+
+}

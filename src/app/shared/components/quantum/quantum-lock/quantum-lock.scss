@@ -79,3 +79,17 @@ svg {
     stroke-width:3;
 
 }
+
+.dial.interactive{
+
+    cursor:pointer;
+
+    transition:.2s;
+
+}
+
+.dial.interactive:hover{
+
+    transform:scale(1.08);
+
+}

@@ -54,4 +54,23 @@ export const routes: Routes = [
         .then(m => m.Dashboard)
   },
 
+  {
+    path: 'student/session/:courseId',
+    loadComponent: () =>
+      import('./features/student/pages/session/session')
+        .then(m => m.Session)
+  },
+  {
+    path: 'student/envelope/:courseId',
+    loadComponent: () =>
+      import('./features/student/pages/envelope/envelope')
+        .then(m => m.Envelope)
+  },
+  {
+  path: 'student/album/:courseId',
+  loadComponent: () =>
+    import('./features/student/pages/album/album')
+      .then(m => m.Album)
+}
+
 ];

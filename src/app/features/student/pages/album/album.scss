@@ -1,0 +1,507 @@
+:host {
+
+    display: block;
+
+    min-height: 100vh;
+
+    background:
+        linear-gradient(
+            180deg,
+            #f8fafc,
+            #eef2ff
+        );
+
+    color: #1e293b;
+
+}
+
+header {
+
+    max-width: 1200px;
+
+    margin: auto;
+
+    padding: 40px 24px 20px;
+
+}
+
+.header-top {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    gap: 20px;
+
+}
+
+h1 {
+
+    margin: 0 0 8px;
+
+    font-size: 32px;
+
+}
+
+header p {
+
+    margin: 0;
+
+    color: #64748b;
+
+}
+
+.back {
+
+    text-decoration: none;
+
+    color: #2563eb;
+
+    font-weight: 600;
+
+}
+
+.progress-card {
+
+    max-width: 1200px;
+
+    margin: 20px auto;
+
+    padding: 24px;
+
+    background: white;
+
+    border-radius: 20px;
+
+    box-shadow:
+        0 8px 25px rgba(0, 0, 0, .06);
+
+}
+
+.progress-header {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+}
+
+.progress-header span {
+
+    display: block;
+
+    color: #64748b;
+
+    font-size: 14px;
+
+}
+
+.progress-header strong {
+
+    display: block;
+
+    font-size: 26px;
+
+    margin-top: 4px;
+
+}
+
+.progress-header small {
+
+    color: #94a3b8;
+
+}
+
+.percentage {
+
+    font-size: 32px;
+
+    font-weight: 800;
+
+}
+
+.progress {
+
+    height: 12px;
+
+    margin-top: 20px;
+
+    border-radius: 999px;
+
+    background: #e2e8f0;
+
+    overflow: hidden;
+
+}
+
+.progress-bar {
+
+    height: 100%;
+
+    border-radius: inherit;
+
+    background:
+        linear-gradient(
+            90deg,
+            #2563eb,
+            #7c3aed
+        );
+
+    transition: width .5s ease;
+
+}
+
+.rarities {
+
+    max-width: 1200px;
+
+    margin: 20px auto;
+
+    padding: 0 24px;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap: 16px;
+
+}
+
+.rarity {
+
+    padding: 18px;
+
+    background: white;
+
+    border-radius: 16px;
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    box-shadow:
+        0 5px 15px rgba(0, 0, 0, .04);
+
+}
+
+.rarity span {
+
+    font-size: 14px;
+
+    color: #64748b;
+
+}
+
+.rarity strong {
+
+    font-size: 18px;
+
+}
+
+.album {
+
+    max-width: 1200px;
+
+    margin: 30px auto;
+
+    padding: 0 24px 50px;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(5, 1fr);
+
+    gap: 20px;
+
+}
+
+.album-card {
+
+    min-height: 300px;
+
+    padding: 22px;
+
+    background: white;
+
+    border-radius: 20px;
+
+    text-align: center;
+
+    position: relative;
+
+    overflow: hidden;
+
+    border: 2px solid transparent;
+
+    box-shadow:
+        0 8px 20px rgba(0, 0, 0, .07);
+
+    transition:
+        transform .25s,
+        box-shadow .25s;
+
+}
+
+.album-card:hover {
+
+    transform: translateY(-5px);
+
+    box-shadow:
+        0 14px 28px rgba(0, 0, 0, .12);
+
+}
+
+.card-emoji {
+
+    font-size: 80px;
+
+    margin: 25px 0 15px;
+
+}
+
+.album-card h3 {
+
+    margin: 0 0 10px;
+
+}
+
+.album-card p {
+
+    min-height: 48px;
+
+    color: #64748b;
+
+    font-size: 13px;
+
+    line-height: 1.4;
+
+}
+
+.rarity-badge {
+
+    display: inline-block;
+
+    margin-top: 12px;
+
+    padding: 6px 12px;
+
+    border-radius: 999px;
+
+    background: #e2e8f0;
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+}
+
+.common {
+
+    border-color: #22c55e;
+
+}
+
+.rare {
+
+    border-color: #3b82f6;
+
+}
+
+.epic {
+
+    border-color: #8b5cf6;
+
+}
+
+.legendary {
+
+    border-color: #f59e0b;
+
+}
+
+.locked {
+
+    opacity: .55;
+
+    background: #e2e8f0;
+
+}
+
+.locked:hover {
+
+    transform: none;
+
+}
+
+.locked-card {
+
+    height: 100%;
+
+    min-height: 250px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: center;
+
+    align-items: center;
+
+    color: #64748b;
+
+}
+
+.question {
+
+    width: 100px;
+
+    height: 100px;
+
+    border-radius: 50%;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    background: #cbd5e1;
+
+    color: #64748b;
+
+    font-size: 56px;
+
+    font-weight: 800;
+
+    margin-bottom: 20px;
+
+}
+
+.loading,
+.empty {
+
+    min-height: 70vh;
+
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: center;
+
+    align-items: center;
+
+    text-align: center;
+
+    padding: 30px;
+
+}
+
+.loading-icon,
+.icon {
+
+    font-size: 72px;
+
+    margin-bottom: 20px;
+
+}
+
+.empty p {
+
+    color: #64748b;
+
+}
+
+.empty button {
+
+    margin-top: 20px;
+
+    border: none;
+
+    padding: 12px 24px;
+
+    border-radius: 10px;
+
+    background: #2563eb;
+
+    color: white;
+
+    cursor: pointer;
+
+}
+
+@media (max-width: 1000px) {
+
+    .album {
+
+        grid-template-columns:
+            repeat(4, 1fr);
+
+    }
+
+}
+
+@media (max-width: 750px) {
+
+    .rarities {
+
+        grid-template-columns:
+            repeat(2, 1fr);
+
+    }
+
+    .album {
+
+        grid-template-columns:
+            repeat(3, 1fr);
+
+    }
+
+}
+
+@media (max-width: 500px) {
+
+    .header-top {
+
+        flex-direction: column;
+
+        align-items: flex-start;
+
+    }
+
+    .rarities {
+
+        grid-template-columns: 1fr;
+
+    }
+
+    .album {
+
+        grid-template-columns:
+            repeat(2, 1fr);
+
+        gap: 12px;
+
+    }
+
+    .album-card {
+
+        min-height: 250px;
+
+        padding: 14px;
+
+    }
+
+    .card-emoji {
+
+        font-size: 60px;
+
+    }
+
+}

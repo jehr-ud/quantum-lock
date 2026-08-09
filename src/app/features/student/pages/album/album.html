@@ -1,0 +1,252 @@
+@if(loading()){
+
+<div class="loading">
+
+    <div class="loading-icon">
+        🕷️
+    </div>
+
+    <h2>
+
+        Cargando el álbum...
+
+    </h2>
+
+</div>
+
+}@else if(error()){
+
+<div class="empty">
+
+    <div class="icon">
+        ⚠️
+    </div>
+
+    <h2>
+
+        No fue posible cargar el álbum
+
+    </h2>
+
+    <p>
+
+        {{ error() }}
+
+    </p>
+
+    <button
+        routerLink="/student/dashboard">
+
+        Volver
+
+    </button>
+
+</div>
+
+}@else{
+
+<header>
+
+    <div class="header-top">
+
+        <div>
+
+            <h1>
+
+                🕷️ Mi Álbum
+
+            </h1>
+
+            <p>
+
+                Colección Spider-Verse
+
+            </p>
+
+        </div>
+
+        <a
+            routerLink="/student/dashboard"
+            class="back">
+
+            ← Volver
+
+        </a>
+
+    </div>
+
+</header>
+
+<section class="progress-card">
+
+    <div class="progress-header">
+
+        <div>
+
+            <span>
+
+                Colección
+
+            </span>
+
+            <strong>
+
+                {{ collectedCount() }}
+                /
+                {{ totalCards() }}
+
+            </strong>
+
+            <small>
+
+                cartas obtenidas
+
+            </small>
+
+        </div>
+
+        <div class="percentage">
+
+            {{ progress() }}%
+
+        </div>
+
+    </div>
+
+    <div class="progress">
+
+        <div
+            class="progress-bar"
+            [style.width.%]="progress()">
+
+        </div>
+
+    </div>
+
+</section>
+
+<section class="rarities">
+
+    <div class="rarity common">
+
+        <span>Comunes</span>
+
+        <strong>
+
+            {{ commonCount().collected }}
+            /
+            {{ commonCount().total }}
+
+        </strong>
+
+    </div>
+
+    <div class="rarity rare">
+
+        <span>Raras</span>
+
+        <strong>
+
+            {{ rareCount().collected }}
+            /
+            {{ rareCount().total }}
+
+        </strong>
+
+    </div>
+
+    <div class="rarity epic">
+
+        <span>Épicas</span>
+
+        <strong>
+
+            {{ epicCount().collected }}
+            /
+            {{ epicCount().total }}
+
+        </strong>
+
+    </div>
+
+    <div class="rarity legendary">
+
+        <span>Legendarias</span>
+
+        <strong>
+
+            {{ legendaryCount().collected }}
+            /
+            {{ legendaryCount().total }}
+
+        </strong>
+
+    </div>
+
+</section>
+
+<section class="album">
+
+    @for(card of cards(); track card.id){
+
+    <article
+        class="album-card"
+        [class.locked]="!card.collected"
+        [class.common]="card.rarity === 'COMMON'"
+        [class.rare]="card.rarity === 'RARE'"
+        [class.epic]="card.rarity === 'EPIC'"
+        [class.legendary]="card.rarity === 'LEGENDARY'">
+
+        @if(card.collected){
+
+        <div class="card-emoji">
+
+            {{ card.emoji }}
+
+        </div>
+
+        <h3>
+
+            {{ card.title }}
+
+        </h3>
+
+        <p>
+
+            {{ card.description }}
+
+        </p>
+
+        <span class="rarity-badge">
+
+            {{ card.rarity }}
+
+        </span>
+
+        }@else{
+
+        <div class="locked-card">
+
+            <div class="question">
+
+                ?
+
+            </div>
+
+            <span>
+
+                Carta bloqueada
+
+            </span>
+
+        </div>
+
+        }
+
+    </article>
+
+    }
+
+</section>
+
+}

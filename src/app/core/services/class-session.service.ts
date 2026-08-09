@@ -6,7 +6,12 @@ import {
   setDoc,
   serverTimestamp,
   Timestamp,
-  onSnapshot
+  onSnapshot,
+  getDocs,
+  limit,
+  orderBy,
+  query,
+  where
 } from 'firebase/firestore';
 
 import { firestore } from '../firebase/firebase';
@@ -39,26 +44,79 @@ export class ClassSessionService {
 
   watchSession(id: string): void {
 
-  const ref = doc(
-    firestore,
-    Collections.CLASS_SESSIONS,
-    id
-  );
-
-  onSnapshot(ref, snapshot => {
-
-    if (!snapshot.exists()) {
-      return;
-    }
-
-    this.session.set(
-      snapshot.data() as ClassSession
+    const ref = doc(
+      firestore,
+      Collections.CLASS_SESSIONS,
+      id
     );
 
-  });
+    onSnapshot(ref, snapshot => {
 
-}
+      if (!snapshot.exists()) {
+        return;
+      }
 
+      this.session.set(
+        snapshot.data() as ClassSession
+      );
+
+    });
+
+  }
+
+  async findActiveSession(
+    courseId: string
+  ): Promise<ClassSession | null> {
+
+    const q = query(
+
+      collection(
+        firestore,
+        Collections.CLASS_SESSIONS
+      ),
+
+      where('courseId', '==', courseId),
+
+      where(
+        'status',
+        '==',
+        SessionStatus.ACTIVE
+      ),
+
+      orderBy(
+        'createdAt',
+        'desc'
+      ),
+
+      limit(1)
+
+    );
+
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+
+      return null;
+
+    }
+
+    const session =
+      snapshot.docs[0].data() as ClassSession;
+
+    // Validar que no haya expirado
+
+    if (
+      session.expiresAt instanceof Timestamp &&
+      session.expiresAt.toMillis() < Date.now()
+    ) {
+
+      return null;
+
+    }
+
+    return session;
+
+  }
   async createSession(
     courseId: string,
     teacherUid: string
@@ -108,28 +166,68 @@ export class ClassSessionService {
 
   private generateQuantumLock(): QuantumLock {
 
-  return {
+    return {
 
-    positions: Array.from(
+      positions: Array.from(
 
-      { length: 5 },
+        { length: 5 },
 
-      () => this.randomDirection()
+        () => this.randomDirection()
 
-    )
+      )
 
-  };
+    };
 
-}
+  }
 
-private randomDirection(): QuantumDirection {
+  async getLatestSession(
+    courseId: string
+  ): Promise<ClassSession | null> {
 
-  return this.directions[
-    Math.floor(
-      Math.random() * this.directions.length
-    )
-  ];
+    const q = query(
 
-}
+      collection(
+        firestore,
+        Collections.CLASS_SESSIONS
+      ),
+
+      where(
+        'courseId',
+        '==',
+        courseId
+      ),
+
+      orderBy(
+        'createdAt',
+        'desc'
+      ),
+
+      limit(1)
+
+    );
+
+    const snapshot =
+      await getDocs(q);
+
+    if (snapshot.empty) {
+
+      return null;
+
+    }
+
+    return snapshot.docs[0].data() as ClassSession;
+
+  }
+
+
+  private randomDirection(): QuantumDirection {
+
+    return this.directions[
+      Math.floor(
+        Math.random() * this.directions.length
+      )
+    ];
+
+  }
 
 }

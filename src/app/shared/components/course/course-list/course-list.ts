@@ -23,4 +23,10 @@ export class CourseList {
   readonly action =
     output<Course>();
 
+  readonly secondaryActionText =
+    input<string | null>(null);
+
+  readonly secondaryAction =
+    output<Course>();
+
 }
