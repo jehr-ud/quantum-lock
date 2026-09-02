@@ -1,6 +1,7 @@
 import {
   Component,
-  inject
+  inject,
+  signal
 } from '@angular/core';
 import { Router } from '@angular/router';
 
@@ -11,6 +12,7 @@ import { Course } from '../../../../models/course';
 
 import { CourseService } from '../../../../core/services/course.service';
 import { ClassSessionService } from '../../../../core/services/class-session.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-student-dashboard',
@@ -27,6 +29,9 @@ export class Dashboard {
   private readonly router =
     inject(Router);
 
+  private readonly auth =
+    inject(AuthService);
+
   private readonly courseService =
     inject(CourseService);
 
@@ -35,6 +40,58 @@ export class Dashboard {
 
   readonly courses =
     this.courseService.courses;
+
+  /**
+   * RQ07 — Estado de la acción de cerrar sesión.
+   */
+  readonly logouting = signal(false);
+  readonly logoutError = signal('');
+
+  /**
+   * RQ07 — Cierra la sesión de Firebase Authentication
+   * y redirige al login. No modifica datos de la
+   * aplicación.
+   */
+  async logout() {
+
+    if (this.logouting()) {
+
+      return;
+
+    }
+
+    this.logouting.set(true);
+
+    this.logoutError.set('');
+
+    try {
+
+      await this.auth.signOut();
+
+      await this.router.navigate([
+
+        '/login'
+
+      ]);
+
+    } catch (error) {
+
+      console.error(
+        'Error cerrando sesión:',
+        error
+      );
+
+      this.logoutError.set(
+        'No fue posible cerrar la sesión. Inténtalo nuevamente.'
+      );
+
+    } finally {
+
+      this.logouting.set(false);
+
+    }
+
+  }
 
 
   async openCourse(

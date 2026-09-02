@@ -112,11 +112,29 @@
 
                 <strong>
 
-                    0
+                    @if(connectedError()){
+
+                    —
+
+                    }@else{
+
+                    {{ connectedStudents() }}
+
+                    }
 
                 </strong>
 
             </div>
+
+            @if(connectedError()){
+
+            <small class="connected-error">
+
+                No fue posible cargar el conteo de estudiantes.
+
+            </small>
+
+            }
         </section>
 
     </div>

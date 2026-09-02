@@ -2,7 +2,9 @@ import { Injectable, computed, signal, inject } from '@angular/core';
 
 import {
   createUserWithEmailAndPassword,
-  signInWithEmailAndPassword
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  signOut as firebaseSignOut
 } from 'firebase/auth';
 import { User as FirebaseUser, onAuthStateChanged } from 'firebase/auth';
 
@@ -164,6 +166,36 @@ export class AuthService {
     await this.configService.load();
 
     return user;
+
+  }
+
+  /**
+   * RQ04 — Solicita el restablecimiento de contraseña
+   * a través de Firebase Authentication.
+   */
+  async sendPasswordReset(
+    email: string
+  ): Promise<void> {
+
+    await sendPasswordResetEmail(
+      auth,
+      email
+    );
+
+  }
+
+  /**
+   * RQ07 — Termina la sesión actual de Firebase
+   * Authentication. El listener de estado de
+   * autenticación actualizará la señal `currentUser`.
+   * No se modifica ni elimina ningún dato de la
+   * aplicación.
+   */
+  async signOut(): Promise<void> {
+
+    await firebaseSignOut(
+      auth
+    );
 
   }
 

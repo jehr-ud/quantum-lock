@@ -4,9 +4,25 @@
 
         title="Mis cursos"
 
-        subtitle="Completa el Quantum Lock para registrar tu asistencia.">
+        subtitle="Completa el Quantum Lock para registrar tu asistencia."
+
+        [showLogout]="true"
+
+        [logouting]="logouting()"
+
+        (logout)="logout()">
 
     </app-course-header>
+
+    @if(logoutError()){
+
+    <div class="logout-message">
+
+        ❌ {{ logoutError() }}
+
+    </div>
+
+    }
 
     <app-course-list
 

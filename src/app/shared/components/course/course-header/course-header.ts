@@ -1,4 +1,8 @@
-import { Component, input } from '@angular/core';
+import {
+  Component,
+  input,
+  output
+} from '@angular/core';
 
 @Component({
   selector: 'app-course-header',
@@ -14,5 +18,16 @@ export class CourseHeader {
   readonly subtitle = input(
     'Selecciona un curso para iniciar una nueva sesión.'
   );
+
+  /**
+   * RQ07 — Capacidad opcional para mostrar la acción
+   * de cerrar sesión. No altera el comportamiento
+   * existente cuando no se utiliza.
+   */
+  readonly showLogout = input(false);
+
+  readonly logouting = input(false);
+
+  readonly logout = output<void>();
 
 }

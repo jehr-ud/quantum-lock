@@ -99,9 +99,25 @@
 
             <small>
 
-                cartas obtenidas
+                cartas únicas
 
             </small>
+
+            <div class="total-obtained">
+
+                <span>
+
+                    Total de recompensas obtenidas
+
+                </span>
+
+                <strong>
+
+                    {{ totalObtained() }}
+
+                </strong>
+
+            </div>
 
         </div>
 
@@ -204,6 +220,12 @@
             {{ card.emoji }}
 
         </div>
+
+        <span class="quantity">
+
+            x{{ card.quantity }}
+
+        </span>
 
         <h3>
 

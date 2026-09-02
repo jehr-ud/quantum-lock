@@ -12,6 +12,66 @@
 
 </div>
 
+}@else if(loadError()){
+
+<div class="empty">
+
+    <div class="icon">
+
+        ⚠️
+
+    </div>
+
+    <h2>
+
+        No fue posible cargar la sesión
+
+    </h2>
+
+    <p>
+
+        {{ loadError() }}
+
+    </p>
+
+    <button class="retry" (click)="retry()">
+
+        Reintentar
+
+    </button>
+
+</div>
+
+}@else if(unavailable()){
+
+<div class="empty">
+
+    <div class="icon">
+
+        🔒
+
+    </div>
+
+    <h2>
+
+        La sesión ya no está disponible
+
+    </h2>
+
+    <p>
+
+        El tiempo de la sesión terminó o el profesor la cerró.
+
+    </p>
+
+    <button class="retry" (click)="retry()">
+
+        Revisar sesión
+
+    </button>
+
+</div>
+
 }@else if(!session()){
 
 <div class="empty">
@@ -24,15 +84,21 @@
 
     <h2>
 
-        No hay una sesión activa
+        La sesión aún no ha comenzado
 
     </h2>
 
     <p>
 
-        Tu profesor aún no ha iniciado una sesión para este curso.
+        Espera a que el profesor inicie la sesión.
 
     </p>
+
+    <button class="retry" (click)="retry()">
+
+        Reintentar
+
+    </button>
 
 </div>
 
@@ -136,7 +202,7 @@
 
 <section class="lock" [class.shake]="shaking()">
 
-    <app-quantum-lock [lock]="session()!.quantumLock" [interactive]="true" (solved)="solved()" (failed)="failed()">
+    <app-quantum-lock [lock]="session()!.quantumLock" [interactive]="interactive()" (solved)="solved()" (failed)="failed()">
 
     </app-quantum-lock>
 

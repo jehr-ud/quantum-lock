@@ -16,4 +16,18 @@
 
     </div>
 
+    @if(showLogout()){
+
+        <button
+            class="logout-btn"
+            type="button"
+            [disabled]="logouting()"
+            (click)="logout.emit()">
+
+            {{ logouting() ? 'Cerrando sesión…' : 'Cerrar sesión' }}
+
+        </button>
+
+    }
+
 </header>

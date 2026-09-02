@@ -17,3 +17,43 @@
     padding:48px 24px;
 
 }
+
+.export-message{
+
+    margin-bottom:20px;
+
+    padding:14px 18px;
+
+    border-radius:12px;
+
+    background:#eef2ff;
+
+    color:#3730a3;
+
+    font-weight:600;
+
+}
+
+.export-message.error{
+
+    background:#fef2f2;
+
+    color:#b91c1c;
+
+}
+
+.logout-message{
+
+    margin-bottom:20px;
+
+    padding:14px 18px;
+
+    border-radius:12px;
+
+    background:#fef2f2;
+
+    color:#b91c1c;
+
+    font-weight:600;
+
+}

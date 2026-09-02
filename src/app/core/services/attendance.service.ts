@@ -9,7 +9,8 @@ import {
   getDocs,
   where,
   collection,
-  query
+  query,
+  onSnapshot
 } from 'firebase/firestore';
 
 import { firestore } from '../firebase/firebase';
@@ -18,7 +19,22 @@ import { Collections } from '../constants/firestore.collections';
 import { Attendance } from '../../models/attendance';
 import { ClassSession } from '../../models/class-session';
 import { Reward } from '../../models/reward';
-import { REWARD_CARDS } from '../../shared/data/reward-cards';
+import {
+  REWARD_CARDS
+} from '../../shared/data/reward-cards';
+import {
+  SessionStatus
+} from '../enums/session-status';
+import {
+  Timestamp
+} from 'firebase/firestore';
+import {
+  AttendanceExportRow,
+  StudentInfo,
+  buildExportRows,
+  computeRewardCounts,
+  countDistinctStudents
+} from '../utils/domain';
 
 @Injectable({
   providedIn: 'root'
@@ -55,26 +71,160 @@ export class AttendanceService {
     const snapshot =
       await getDocs(q);
 
-    const counts: Record<string, number> = {};
+    return computeRewardCounts(
+      snapshot.docs.map(document =>
+        document.data() as Attendance
+      )
+    );
 
-    for (const document of snapshot.docs) {
+  }
 
-      const attendance =
-        document.data() as Attendance;
+  /**
+   * RQ02 — Observa en tiempo real el número de
+   * estudiantes distintos que registraron asistencia
+   * en la sesión actual.
+   */
+  countSessionStudents(
+    sessionId: string,
+    onResult: (
+      count: number
+    ) => void,
+    onError?: (
+      error: unknown
+    ) => void
+  ): () => void {
 
-      if (
-        attendance.rewardClaimed &&
-        attendance.rewardId
-      ) {
+    const q = query(
 
-        counts[attendance.rewardId] =
-          (counts[attendance.rewardId] ?? 0) + 1;
+      collection(
+        firestore,
+        Collections.ATTENDANCES
+      ),
+
+      where(
+        'sessionId',
+        '==',
+        sessionId
+      )
+
+    );
+
+    return onSnapshot(
+      q,
+      snapshot => {
+
+        onResult(
+          countDistinctStudents(
+            snapshot.docs.map(document =>
+              document.data() as Attendance
+            )
+          )
+        );
+
+      },
+      error => {
+
+        if (onError) {
+
+          onError(error);
+
+        }
 
       }
+    );
+
+  }
+
+  /**
+   * RQ05 — Recupera los registros de asistencia del
+   * curso seleccionado y los convierte en filas para
+   * el reporte de exportación.
+   */
+  async getCourseAttendance(
+    courseId: string
+  ): Promise<AttendanceExportRow[]> {
+
+    const attendanceQuery = query(
+
+      collection(
+        firestore,
+        Collections.ATTENDANCES
+      ),
+
+      where(
+        'courseId',
+        '==',
+        courseId
+      )
+
+    );
+
+    const attendanceSnapshot =
+      await getDocs(attendanceQuery);
+
+    const attendances =
+      attendanceSnapshot.docs.map(document =>
+        document.data() as Attendance
+      );
+
+    const usersById: Record<string, StudentInfo> = {};
+
+    const usersSnapshot =
+      await getDocs(
+        collection(
+          firestore,
+          Collections.USERS
+        )
+      );
+
+    for (const document of usersSnapshot.docs) {
+
+      const data = document.data();
+
+      usersById[document.id] = {
+        firstName: data?.['firstName'],
+        lastName: data?.['lastName'],
+        email: data?.['email']
+      };
 
     }
 
-    return counts;
+    return buildExportRows(
+      attendances,
+      usersById
+    );
+
+  }
+
+  /**
+   * RQ06 — Garantiza que la participación solo sea
+   * válida mientras la sesión está disponible.
+   */
+  private assertSessionAvailable(
+    session: ClassSession
+  ): void {
+
+    if (
+      session.status !==
+      SessionStatus.ACTIVE
+    ) {
+
+      throw new Error(
+        'SESSION_NOT_ACTIVE'
+      );
+
+    }
+
+    if (
+      session.expiresAt instanceof Timestamp &&
+      session.expiresAt.toMillis() < Date.now()
+    ) {
+
+      throw new Error(
+        'SESSION_EXPIRED'
+      );
+
+    }
 
   }
 
@@ -82,6 +232,8 @@ export class AttendanceService {
     session: ClassSession,
     studentUid: string
   ): Promise<Attendance> {
+
+    this.assertSessionAvailable(session);
 
     const id =
       `${session.id}_${studentUid}`;
@@ -182,6 +334,8 @@ export class AttendanceService {
     session: ClassSession,
     studentUid: string
   ): Promise<void> {
+
+    this.assertSessionAvailable(session);
 
     const id =
       `${session.id}_${studentUid}`;

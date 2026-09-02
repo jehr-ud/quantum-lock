@@ -6,7 +6,59 @@
 
 .header{
 
+    display:flex;
+
+    align-items:flex-start;
+
+    justify-content:space-between;
+
+    gap:16px;
+
     margin-bottom:32px;
+
+}
+
+.logout-btn{
+
+    border:1px solid #4f46e5;
+
+    background:transparent;
+
+    color:#4f46e5;
+
+    padding:10px 20px;
+
+    border-radius:12px;
+
+    font-size:15px;
+
+    font-weight:600;
+
+    cursor:pointer;
+
+    transition:.2s;
+
+    white-space:nowrap;
+
+}
+
+.logout-btn:hover{
+
+    background:#eef2ff;
+
+}
+
+.logout-btn:active{
+
+    transform:scale(.98);
+
+}
+
+.logout-btn:disabled{
+
+    opacity:.6;
+
+    cursor:not-allowed;
 
 }
 

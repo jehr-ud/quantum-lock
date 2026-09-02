@@ -116,6 +116,40 @@ header p {
 
 }
 
+.total-obtained {
+
+    margin-top: 12px;
+
+    padding-top: 12px;
+
+    border-top: 1px solid #eef2f7;
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    gap: 12px;
+
+}
+
+.total-obtained span {
+
+    color: #64748b;
+
+    font-size: 14px;
+
+}
+
+.total-obtained strong {
+
+    font-size: 18px;
+
+    margin-top: 0;
+
+}
+
 .percentage {
 
     font-size: 32px;
@@ -263,6 +297,26 @@ header p {
     font-size: 80px;
 
     margin: 25px 0 15px;
+
+}
+
+.quantity {
+
+    display: inline-block;
+
+    padding: 4px 14px;
+
+    border-radius: 999px;
+
+    background: #2563eb;
+
+    color: white;
+
+    font-size: 16px;
+
+    font-weight: 800;
+
+    margin-bottom: 10px;
 
 }
 

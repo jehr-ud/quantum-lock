@@ -4,9 +4,45 @@
 
         title="Mis cursos"
 
-        subtitle="Selecciona un curso para iniciar una nueva sesión.">
+        subtitle="Selecciona un curso para iniciar una nueva sesión."
+
+        [showLogout]="true"
+
+        [logouting]="logouting()"
+
+        (logout)="logout()">
 
     </app-course-header>
+
+    @if(logoutError()){
+
+    <div class="logout-message error">
+
+        ❌ {{ logoutError() }}
+
+    </div>
+
+    }
+
+    @if(exportingCourseId()){
+
+    <div class="export-message">
+
+        ⏳ Generando reporte de asistencia...
+
+    </div>
+
+    }
+
+    @if(exportError()){
+
+    <div class="export-message error">
+
+        ❌ {{ exportError() }}
+
+    </div>
+
+    }
 
     <app-course-list
 
@@ -14,7 +50,11 @@
 
         actionText="Iniciar clase"
 
-        (action)="startSession($event)">
+        (action)="startSession($event)"
+
+        secondaryActionText="Exportar asistencia"
+
+        (secondaryAction)="exportAttendance($event)">
 
     </app-course-list>
 

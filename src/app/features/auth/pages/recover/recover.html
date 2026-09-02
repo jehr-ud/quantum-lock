@@ -1,0 +1,127 @@
+<div class="recover-container">
+
+    <div class="card">
+
+        <div class="logo">
+
+            🗝️
+
+        </div>
+
+        <h1>Quantum Lock</h1>
+
+        <p class="subtitle">
+
+            Recuperar contraseña
+
+        </p>
+
+        @if(success()){
+
+        <div class="success">
+
+            ✅ <strong>Contraseña restablecida.</strong>
+
+            <span>
+
+                Revisa tu correo electrónico para continuar.
+
+            </span>
+
+            <span class="email">
+
+                {{ recoveryEmail() }}
+
+            </span>
+
+        </div>
+
+        <a class="back" routerLink="/login">
+
+            Volver al inicio de sesión
+
+        </a>
+
+        }@else{
+
+        <p class="hint">
+
+            Ingresa tu usuario institucional y te enviaremos
+
+            las instrucciones para restablecer tu contraseña.
+
+        </p>
+
+        <div class="field">
+
+            <label>
+
+                Usuario institucional
+
+            </label>
+
+            <div class="email-input">
+
+                <input
+
+                    type="text"
+
+                    [ngModel]="username()"
+
+                    (ngModelChange)="username.set($event.toLowerCase().trim())"
+
+                    placeholder="jhernandez">
+
+                <span>
+
+                    @{{ defaultDomain }}
+
+                </span>
+
+            </div>
+
+        </div>
+
+        @if(error()){
+
+        <div class="error">
+
+            {{ error() }}
+
+        </div>
+
+        }
+
+        <button
+
+            (click)="recover()"
+
+            [disabled]="loading()">
+
+            @if(loading()){
+
+            Enviando...
+
+            }@else{
+
+            Enviar correo de recuperación
+
+            }
+
+        </button>
+
+        <div class="help">
+
+            <a class="back" routerLink="/login">
+
+                ← Volver al inicio de sesión
+
+            </a>
+
+        </div>
+
+        }
+
+    </div>
+
+</div>

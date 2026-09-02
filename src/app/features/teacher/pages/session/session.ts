@@ -1,8 +1,10 @@
 import {
   Component,
   computed,
+  effect,
   inject,
-  signal
+  signal,
+  OnDestroy
 } from '@angular/core';
 
 import { ActivatedRoute } from '@angular/router';
@@ -10,6 +12,7 @@ import { ActivatedRoute } from '@angular/router';
 import { Timestamp } from 'firebase/firestore';
 
 import { ClassSessionService } from '../../../../core/services/class-session.service';
+import { AttendanceService } from '../../../../core/services/attendance.service';
 
 import { QuantumLock } from '../../../../shared/components/quantum/quantum-lock/quantum-lock';
 
@@ -22,13 +25,16 @@ import { QuantumLock } from '../../../../shared/components/quantum/quantum-lock/
   templateUrl: './session.html',
   styleUrl: './session.scss'
 })
-export class Session {
+export class Session implements OnDestroy {
 
   private readonly route =
     inject(ActivatedRoute);
 
   private readonly sessionService =
     inject(ClassSessionService);
+
+  private readonly attendanceService =
+    inject(AttendanceService);
 
   readonly sessionId =
     this.route.snapshot.paramMap.get('id');
@@ -37,9 +43,23 @@ export class Session {
     this.sessionService.session;
 
   /**
+   * RQ02 — Cantidad de estudiantes distintos que han
+   * registrado su participación en la sesión actual.
+   */
+  readonly connectedStudents =
+    signal(0);
+
+  readonly connectedError =
+    signal(false);
+
+  /**
    * Solo para forzar el recálculo del temporizador cada segundo.
    */
   readonly now = signal(Date.now());
+
+  private unsubscribeCount?: () => void;
+
+  private intervalId?: ReturnType<typeof setInterval>;
 
   constructor() {
 
@@ -51,11 +71,72 @@ export class Session {
 
     }
 
-    setInterval(() => {
+    this.intervalId = setInterval(() => {
 
       this.now.set(Date.now());
 
     }, 1000);
+
+    effect(() => {
+
+      const session = this.session();
+
+      this.unsubscribeCount?.();
+
+      this.unsubscribeCount = undefined;
+
+      this.connectedStudents.set(0);
+
+      this.connectedError.set(false);
+
+      if (!session?.id) {
+
+        return;
+
+      }
+
+      this.unsubscribeCount =
+
+        this.attendanceService.countSessionStudents(
+
+          session.id,
+
+          count => {
+
+            this.connectedStudents.set(
+              count
+            );
+
+            this.connectedError.set(false);
+
+          },
+
+          error => {
+
+            console.error(
+              'Error cargando estudiantes conectados:',
+              error
+            );
+
+            this.connectedError.set(true);
+
+          }
+
+        );
+
+    });
+
+  }
+
+  ngOnDestroy() {
+
+    this.unsubscribeCount?.();
+
+    if (this.intervalId) {
+
+      clearInterval(this.intervalId);
+
+    }
 
   }
 

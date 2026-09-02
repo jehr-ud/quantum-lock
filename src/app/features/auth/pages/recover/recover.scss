@@ -16,7 +16,7 @@
 
 }
 
-.login-container {
+.recover-container {
 
     width: 100%;
 
@@ -82,7 +82,19 @@ h1 {
 
     color: #6b7280;
 
-    margin-bottom: 32px;
+    margin-bottom: 20px;
+
+}
+
+.hint {
+
+    color: #6b7280;
+
+    font-size: 14px;
+
+    line-height: 1.5;
+
+    margin-bottom: 24px;
 
 }
 
@@ -102,23 +114,47 @@ label {
 
 }
 
-input {
+.email-input {
 
-    width: 100%;
-
-    height: 52px;
-
-    border-radius: 12px;
+    display: flex;
 
     border: 1px solid #d1d5db;
 
-    padding: 0 16px;
+    border-radius: 12px;
 
-    font-size: 15px;
+    overflow: hidden;
+
+}
+
+.email-input input {
+
+    border: none;
+
+    flex: 1;
+
+    padding: 14px;
 
     outline: none;
 
-    box-sizing: border-box;
+    font-size: 15px;
+
+}
+
+.email-input span {
+
+    display: flex;
+
+    align-items: center;
+
+    padding: 0 16px;
+
+    background: #f3f4f6;
+
+    color: #6b7280;
+
+    font-weight: 600;
+
+    white-space: nowrap;
 
 }
 
@@ -178,9 +214,39 @@ button:disabled {
 
 }
 
+.success {
+
+    margin: 20px 0;
+
+    padding: 16px;
+
+    border-radius: 12px;
+
+    background: #ecfdf5;
+
+    color: #047857;
+
+    font-size: 14px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 6px;
+
+}
+
+.success .email {
+
+    font-weight: 700;
+
+    color: #047857;
+
+}
+
 .help {
 
-    margin-top: 32px;
+    margin-top: 28px;
 
     text-align: center;
 
@@ -190,7 +256,7 @@ button:disabled {
 
 }
 
-.register-link {
+.back {
 
     display: inline-block;
 
@@ -201,63 +267,15 @@ button:disabled {
     font-weight: 600;
 
     text-decoration: none;
+
     cursor: pointer;
+
+    text-align: center;
 
 }
 
-.register-link:hover {
+.back:hover {
 
     text-decoration: underline;
 
-}
-
-.email-input {
-
-    display: flex;
-
-    border: 1px solid #d1d5db;
-
-    border-radius: 12px;
-
-    overflow: hidden;
-
-}
-
-.email-input input {
-
-    border: none;
-
-    flex: 1;
-
-    padding: 14px;
-
-    outline: none;
-
-}
-
-.email-input span {
-
-    display: flex;
-
-    align-items: center;
-
-    padding: 0 16px;
-
-    background: #f3f4f6;
-
-    color: #6b7280;
-
-    font-weight: 600;
-
-    white-space: nowrap;
-
-}
-
-.help {
-    text-align: center;
-}
-
-.help .register-link {
-    display: block;
-    margin-top: 8px;
 }

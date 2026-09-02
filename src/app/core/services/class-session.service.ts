@@ -8,6 +8,7 @@ import {
   Timestamp,
   onSnapshot,
   getDocs,
+  getDoc,
   limit,
   orderBy,
   query,
@@ -61,6 +62,51 @@ export class ClassSessionService {
       );
 
     });
+
+  }
+
+  /**
+   * Suscribe al documento de una sesión para detectar
+   * cambios de estado o expiración mientras el
+   * estudiante interactúa con el Quantum Lock.
+   */
+  watchSessionStatus(
+    id: string,
+    onUpdate: (
+      session: ClassSession | null
+    ) => void,
+    onError?: (
+      error: unknown
+    ) => void
+  ): () => void {
+
+    const ref = doc(
+      firestore,
+      Collections.CLASS_SESSIONS,
+      id
+    );
+
+    return onSnapshot(
+      ref,
+      snapshot => {
+
+        onUpdate(
+          snapshot.exists()
+            ? snapshot.data() as ClassSession
+            : null
+        );
+
+      },
+      error => {
+
+        if (onError) {
+
+          onError(error);
+
+        }
+
+      }
+    );
 
   }
 
@@ -216,6 +262,34 @@ export class ClassSessionService {
     }
 
     return snapshot.docs[0].data() as ClassSession;
+
+  }
+
+  /**
+   * RQ06 — Recupera una sesión por su identificador
+   * para revalidar su estado antes de aceptar la
+   * resolución del Quantum Lock.
+   */
+  async getSessionById(
+    sessionId: string
+  ): Promise<ClassSession | null> {
+
+    const ref = doc(
+      firestore,
+      Collections.CLASS_SESSIONS,
+      sessionId
+    );
+
+    const snapshot =
+      await getDoc(ref);
+
+    if (!snapshot.exists()) {
+
+      return null;
+
+    }
+
+    return snapshot.data() as ClassSession;
 
   }
 

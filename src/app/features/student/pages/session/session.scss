@@ -70,6 +70,36 @@ header p{
 
 }
 
+.retry{
+
+    margin-top:24px;
+
+    padding:12px 28px;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:#6366f1;
+
+    color:white;
+
+    font-size:15px;
+
+    font-weight:600;
+
+    cursor:pointer;
+
+    transition:.2s;
+
+}
+
+.retry:hover{
+
+    background:#4f46e5;
+
+}
+
 .timer{
 
     font-size:1.5rem;

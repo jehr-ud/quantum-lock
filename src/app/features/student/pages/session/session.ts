@@ -6,7 +6,11 @@ import {
   OnDestroy
 } from '@angular/core';
 
-import { ActivatedRoute, Router } from '@angular/router';
+import {
+  ActivatedRoute,
+  Router
+} from '@angular/router';
+
 import { Timestamp } from 'firebase/firestore';
 
 import { QuantumLock } from '../../../../shared/components/quantum/quantum-lock/quantum-lock';
@@ -14,6 +18,7 @@ import { ClassSession } from '../../../../models/class-session';
 import { ClassSessionService } from '../../../../core/services/class-session.service';
 import { AttendanceService } from '../../../../core/services/attendance.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { isSessionUsable } from '../../../../core/utils/domain';
 
 @Component({
   selector: 'app-student-session',
@@ -53,10 +58,18 @@ export class Session implements OnDestroy {
 
   readonly error = signal('');
 
+  readonly loadError = signal('');
+
+  readonly unavailable = signal(false);
+
   readonly shaking = signal(false);
 
   readonly courseId =
     this.route.snapshot.paramMap.get('courseId');
+
+  private timerId?: number;
+
+  private unsubscribe?: () => void;
 
   constructor() {
 
@@ -70,76 +83,43 @@ export class Session implements OnDestroy {
 
       clearInterval(this.timerId);
 
-    }
-
-  }
-
-  async load() {
-
-    if (!this.courseId) {
-
-      return;
+      this.timerId = undefined;
 
     }
 
+    this.unsubscribe?.();
 
-    const session =
+  }
 
-      await this.sessionService
-        .findActiveSession(this.courseId);
+  /**
+   * RQ06 — Sesión válida para participar: debe estar
+   * activa y no haber expirado.
+   */
+  readonly activeSession = computed(() => {
 
-    this.session.set(session);
+    const session = this.session();
 
-    if (session) {
-      this.startTimer(session);
+    if (!isSessionUsable(session, Date.now())) {
+
+      return null;
 
     }
 
-    this.loading.set(false);
+    return session;
 
-  }
+  });
 
-  private timerId?: number;
+  readonly interactive = computed(() => {
 
-  private startTimer(session: ClassSession) {
+    if (this.unavailable()) {
 
-    const update = () => {
+      return false;
 
-      const expires = session.expiresAt as Timestamp;
+    }
 
-      const seconds = Math.max(
+    return this.activeSession() !== null;
 
-        0,
-
-        Math.floor(
-
-          (expires.toMillis() - Date.now()) / 1000
-
-        )
-
-      );
-
-      this.remainingSeconds.set(seconds);
-
-      if (seconds === 0 && this.timerId) {
-
-        clearInterval(this.timerId);
-
-      }
-
-    };
-
-    update();
-
-    this.timerId = window.setInterval(
-
-      update,
-
-      1000
-
-    );
-
-  }
+  });
 
   readonly timerClass = computed(() => {
 
@@ -175,73 +155,344 @@ export class Session implements OnDestroy {
 
   });
 
-  async solved() {
+  async load() {
 
-    const user =
-      this.auth.currentUser();
+    if (!this.courseId) {
 
-    const session =
-      this.session();
-
-    if (!user || !session) {
+      this.loading.set(false);
 
       return;
 
     }
 
-    await this.attendanceService.register(
+    this.unsubscribe?.();
 
-      session,
+    this.unsubscribe = undefined;
 
-      user.uid
+    this.loading.set(true);
+
+    this.loadError.set('');
+
+    this.unavailable.set(false);
+
+    this.error.set('');
+
+    try {
+
+      const session =
+
+        await this.sessionService
+          .findActiveSession(this.courseId);
+
+      this.session.set(session);
+
+      if (session) {
+
+        this.startTimer(session);
+
+        this.unsubscribe =
+
+          this.sessionService.watchSessionStatus(
+
+            session.id,
+
+            updated =>
+              this.onSessionUpdate(updated),
+
+            error => {
+
+              console.error(
+                'Error observando la sesión:',
+                error
+              );
+
+              this.loadError.set(
+                'No fue posible cargar la información de la sesión. Inténtalo nuevamente.'
+              );
+
+            }
+
+          );
+
+      }
+
+    } catch (error) {
+
+      console.error(
+        'Error cargando la sesión:',
+        error
+      );
+
+      this.loadError.set(
+        'No fue posible cargar la información de la sesión. Inténtalo nuevamente.'
+      );
+
+    } finally {
+
+      this.loading.set(false);
+
+    }
+
+  }
+
+  retry() {
+
+    this.load();
+
+  }
+
+  /**
+   * RQ06 — Si la sesión deja de estar disponible
+   * durante la interacción, se detiene la
+   * participación de forma segura.
+   */
+  private onSessionUpdate(
+    updated: ClassSession | null
+  ) {
+
+    if (
+      !updated ||
+      !isSessionUsable(updated, Date.now())
+    ) {
+
+      this.handleUnavailable();
+
+    }
+
+  }
+
+  private handleUnavailable() {
+
+    this.unavailable.set(true);
+
+    if (this.timerId) {
+
+      clearInterval(this.timerId);
+
+      this.timerId = undefined;
+
+    }
+
+  }
+
+  private startTimer(session: ClassSession) {
+
+    const update = () => {
+
+      const expires = session.expiresAt as Timestamp;
+
+      const seconds = Math.max(
+
+        0,
+
+        Math.floor(
+
+          (expires.toMillis() - Date.now()) / 1000
+
+        )
+
+      );
+
+      this.remainingSeconds.set(seconds);
+
+      if (seconds === 0 && this.timerId) {
+
+        clearInterval(this.timerId);
+
+        this.timerId = undefined;
+
+        this.handleUnavailable();
+
+      }
+
+    };
+
+    update();
+
+    this.timerId = window.setInterval(
+
+      update,
+
+      1000
 
     );
 
-    await this.router.navigate([
+  }
 
-      '/student/envelope',
+  /**
+   * RQ06 — Revalida el estado de la sesión justo antes
+   * de aceptar la resolución del Quantum Lock.
+   */
+  private async refreshActiveSession(): Promise<ClassSession | null> {
 
-      session.courseId
+    const current =
+      this.session();
 
-    ]);
+    if (!current?.id) {
+
+      return null;
+
+    }
+
+    try {
+
+      const fresh =
+        await this.sessionService
+          .getSessionById(current.id);
+
+      if (
+        fresh &&
+        isSessionUsable(fresh, Date.now())
+      ) {
+
+        return fresh;
+
+      }
+
+      return null;
+
+    } catch (error) {
+
+      console.error(
+        'Error revalidando la sesión:',
+        error
+      );
+
+      this.loadError.set(
+        'No fue posible cargar la información de la sesión. Inténtalo nuevamente.'
+      );
+
+      return null;
+
+    }
+
+  }
+
+  async solved() {
+
+    const user =
+      this.auth.currentUser();
+
+    if (!user) {
+
+      return;
+
+    }
+
+    const session =
+      await this.refreshActiveSession();
+
+    if (!session) {
+
+      this.handleUnavailable();
+
+      return;
+
+    }
+
+    try {
+
+      await this.attendanceService.register(
+        session,
+        user.uid
+      );
+
+      await this.router.navigate([
+
+        '/student/envelope',
+
+        session.courseId
+
+      ]);
+
+    } catch (error: any) {
+
+      if (
+        error?.message === 'SESSION_NOT_ACTIVE' ||
+        error?.message === 'SESSION_EXPIRED'
+      ) {
+
+        this.handleUnavailable();
+
+        return;
+
+      }
+
+      console.error(
+        'Error registrando asistencia:',
+        error
+      );
+
+      this.error.set(
+        'No fue posible registrar tu asistencia. Inténtalo nuevamente.'
+      );
+
+    }
 
   }
 
   async failed() {
 
-  const user =
-    this.auth.currentUser();
+    const user =
+      this.auth.currentUser();
 
-  const session =
-    this.session();
+    const session =
+      this.activeSession();
 
-  if (!user || !session) {
+    if (!user || !session) {
 
-    return;
+      this.handleUnavailable();
 
-  }
+      return;
 
-  await this.attendanceService
-    .registerFailedAttempt(
+    }
 
-      session,
+    try {
 
-      user.uid
+      await this.attendanceService
+        .registerFailedAttempt(
+          session,
+          user.uid
+        );
 
+    } catch (error: any) {
+
+      if (
+        error?.message === 'SESSION_NOT_ACTIVE' ||
+        error?.message === 'SESSION_EXPIRED'
+      ) {
+
+        this.handleUnavailable();
+
+        return;
+
+      }
+
+      console.error(
+        'Error registrando intento:',
+        error
+      );
+
+      this.error.set(
+        'No fue posible registrar tu intento. Inténtalo nuevamente.'
+      );
+
+      return;
+
+    }
+
+    this.error.set(
+      'El patrón no coincide.'
     );
 
-  this.error.set(
-    'El patrón no coincide.'
-  );
+    this.shaking.set(true);
 
-  this.shaking.set(true);
+    setTimeout(() => {
 
-  setTimeout(() => {
+      this.shaking.set(false);
 
-    this.shaking.set(false);
+    }, 600);
 
-  }, 600);
-
-}
+  }
 
 }
