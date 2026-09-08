@@ -5,6 +5,7 @@ import { SessionStatus } from '../enums/session-status';
 
 import {
   buildExportRows,
+  buildStudentReportRows,
   computeRewardCounts,
   countDistinctStudents,
   formatExportDate,
@@ -307,6 +308,143 @@ describe('buildExportRows', () => {
       buildExportRows(records, users);
 
     expect(rows).toHaveLength(records.length);
+
+  });
+
+});
+
+describe('buildStudentReportRows', () => {
+
+  it('genera una fila por sesión con estado Resolvió y una carta', () => {
+
+    const records = [
+      attendance({
+        studentUid: 'a',
+        solved: true,
+        rewardClaimed: true,
+        rewardId: 'sp-001',
+        registeredAt: timestamp(
+          new Date(2026, 8, 1, 9, 0)
+        ) as any
+      })
+    ];
+
+    const rows =
+      buildStudentReportRows(records);
+
+    expect(rows).toHaveLength(1);
+
+    expect(rows[0]).toEqual({
+      fecha: '01/09/2026 09:00',
+      estado: 'Resolvió',
+      cartas: 1
+    });
+
+  });
+
+  it('marca Falló con cero cartas al estudiante que no resolvió', () => {
+
+    const records = [
+      attendance({
+        studentUid: 'a',
+        solved: false,
+        rewardClaimed: false,
+        registeredAt: timestamp(
+          new Date(2026, 8, 1, 9, 0)
+        ) as any
+      })
+    ];
+
+    const rows =
+      buildStudentReportRows(records);
+
+    expect(rows[0]).toEqual({
+      fecha: '01/09/2026 09:00',
+      estado: 'Falló',
+      cartas: 0
+    });
+
+  });
+
+  it('no cuenta la carta hasta reclamar la recompensa', () => {
+
+    const records = [
+      attendance({
+        studentUid: 'a',
+        solved: true,
+        rewardClaimed: false,
+        rewardId: 'sp-001',
+        registeredAt: timestamp(
+          new Date(2026, 8, 1, 9, 0)
+        ) as any
+      })
+    ];
+
+    const rows =
+      buildStudentReportRows(records);
+
+    expect(rows[0].cartas).toBe(0);
+
+  });
+
+  it('una sesión con varios intentos produce una sola fila', () => {
+
+    const records = [
+      attendance({
+        id: 's_a',
+        studentUid: 'a',
+        solved: true,
+        rewardClaimed: true,
+        rewardId: 'sp-001',
+        attempts: 3,
+        registeredAt: timestamp(
+          new Date(2026, 8, 1, 9, 0)
+        ) as any
+      })
+    ];
+
+    const rows =
+      buildStudentReportRows(records);
+
+    expect(rows).toHaveLength(1);
+
+    expect(rows[0]).toEqual({
+      fecha: '01/09/2026 09:00',
+      estado: 'Resolvió',
+      cartas: 1
+    });
+
+  });
+
+  it('ordena las filas por fecha', () => {
+
+    const records = [
+      attendance({
+        studentUid: 'a',
+        solved: true,
+        rewardClaimed: true,
+        rewardId: 'sp-001',
+        registeredAt: timestamp(
+          new Date(2026, 8, 2, 9, 0)
+        ) as any
+      }),
+      attendance({
+        studentUid: 'a',
+        solved: true,
+        rewardClaimed: true,
+        rewardId: 'sp-002',
+        registeredAt: timestamp(
+          new Date(2026, 8, 1, 9, 0)
+        ) as any
+      })
+    ];
+
+    const rows =
+      buildStudentReportRows(records);
+
+    expect(rows[0].fecha).toBe('01/09/2026 09:00');
+
+    expect(rows[1].fecha).toBe('02/09/2026 09:00');
 
   });
 

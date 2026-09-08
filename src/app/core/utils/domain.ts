@@ -14,6 +14,12 @@ export interface StudentInfo {
   email?: string;
 }
 
+export interface StudentReportRow {
+  fecha: string;
+  estado: 'Resolvió' | 'Falló';
+  cartas: number;
+}
+
 /**
  * RQ06 — Determina si una sesión está disponible
  * para que un estudiante participe.
@@ -180,6 +186,38 @@ export function buildExportRows(
       return row;
 
     })
+    .sort((a, b) =>
+      a.fecha.localeCompare(b.fecha)
+    );
+
+}
+
+/**
+ * RQ08 — Construye las filas del reporte por curso del
+ * estudiante a partir de sus registros de asistencia.
+ * Cada sesión produce una única fila. Una participación
+ * fallida aparece con cero cartas. La cantidad de cartas
+ * por fila y el total derivan del mismo estado de
+ * recompensa usado por el álbum.
+ */
+export function buildStudentReportRows(
+  attendances: Attendance[]
+): StudentReportRow[] {
+
+  return attendances
+    .map((attendance): StudentReportRow => ({
+      fecha: formatExportDate(
+        attendance.registeredAt
+      ),
+      estado: attendance.solved
+        ? 'Resolvió'
+        : 'Falló',
+      cartas:
+        attendance.rewardClaimed &&
+        attendance.rewardId
+          ? 1
+          : 0
+    }))
     .sort((a, b) =>
       a.fecha.localeCompare(b.fecha)
     );

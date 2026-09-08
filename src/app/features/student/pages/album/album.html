@@ -65,15 +65,55 @@
 
         </div>
 
-        <a
-            routerLink="/student/dashboard"
-            class="back">
+        <div class="header-actions">
 
-            ← Volver
+            <button
+                type="button"
+                class="report"
+                (click)="downloadReport()"
+                [disabled]="reporting()">
 
-        </a>
+                @if(reporting()){
+
+                <span>
+
+                    Generando...
+
+                </span>
+
+                }@else{
+
+                <span>
+
+                    📄 Descargar reporte
+
+                </span>
+
+                }
+
+            </button>
+
+            <a
+                routerLink="/student/dashboard"
+                class="back">
+
+                ← Volver
+
+            </a>
+
+        </div>
 
     </div>
+
+    @if(reportError()){
+
+    <div class="report-error">
+
+        ❌ {{ reportError() }}
+
+    </div>
+
+    }
 
 </header>
 

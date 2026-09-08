@@ -12,10 +12,13 @@ import {
 
 import { AuthService } from '../../../../core/services/auth.service';
 import { AttendanceService } from '../../../../core/services/attendance.service';
+import { CourseService } from '../../../../core/services/course.service';
 
 import { REWARD_CARDS } from '../../../../shared/data/reward-cards';
 
 import { RewardRarity } from '../../../../core/enums/reward-rarity';
+
+import { StudentReportRow } from '../../../../core/utils/domain';
 
 @Component({
   selector: 'app-album',
@@ -37,6 +40,35 @@ export class Album {
 
   private readonly attendanceService =
     inject(AttendanceService);
+
+  private readonly courseService =
+    inject(CourseService);
+
+  readonly courseName =
+    computed(() => {
+
+      const courseId =
+        this.courseId;
+
+      if (!courseId) {
+
+        return '';
+
+      }
+
+      const course =
+        this.courseService.courses()
+          .find(item => item.id === courseId);
+
+      return course?.name || '';
+
+    });
+
+  /**
+   * RQ08 — Estado de la descarga del reporte.
+   */
+  readonly reporting = signal(false);
+  readonly reportError = signal('');
 
   readonly loading =
     signal(true);
@@ -257,6 +289,191 @@ export class Album {
         cards.length
 
     };
+
+  }
+
+  /**
+   * RQ08 — Descarga el reporte por curso del estudiante
+   * en formato PDF. Solo usa los datos Firestore del
+   * estudiante autenticado y no modifica ninguno.
+   */
+  async downloadReport() {
+
+    if (this.reporting()) {
+
+      return;
+
+    }
+
+    const courseId =
+      this.courseId;
+
+    const user =
+      this.auth.currentUser();
+
+    if (!courseId || !user) {
+
+      this.reportError.set(
+        'No es posible generar el reporte en este momento.'
+      );
+
+      return;
+
+    }
+
+    this.reporting.set(true);
+
+    this.reportError.set('');
+
+    try {
+
+      const rows =
+        await this.attendanceService
+          .getStudentCourseReport(
+            user.uid,
+            courseId
+          );
+
+      const { jsPDF } =
+        await import('jspdf');
+
+      const autoTable =
+        (await import('jspdf-autotable'))
+          .default;
+
+      this.generatePdf(
+        jsPDF,
+        autoTable,
+        rows,
+        user,
+        courseId
+      );
+
+    } catch (error) {
+
+      console.error(
+        'Error generando reporte:',
+        error
+      );
+
+      this.reportError.set(
+        'No fue posible generar el reporte. Inténtalo nuevamente.'
+      );
+
+    } finally {
+
+      this.reporting.set(false);
+
+    }
+
+  }
+
+  private generatePdf(
+    jsPDFType: typeof import('jspdf').jsPDF,
+    autoTable: typeof import('jspdf-autotable').default,
+    rows: StudentReportRow[],
+    user: { firstName: string; lastName: string },
+    courseId: string
+  ) {
+
+    const doc = new jsPDFType();
+
+    const fullName =
+      [user.firstName, user.lastName]
+        .filter(Boolean)
+        .join(' ')
+        .trim();
+
+    doc.setFontSize(16);
+
+    doc.text(
+      'Reporte de Participación',
+      14,
+      20
+    );
+
+    doc.setFontSize(11);
+
+    doc.text(
+      'Quantum Lock',
+      14,
+      27
+    );
+
+    doc.setFontSize(10);
+
+    doc.text(
+      `Materia: ${this.courseName() || courseId}`,
+      14,
+      36
+    );
+
+    doc.text(
+      `Estudiante: ${fullName}`,
+      14,
+      43
+    );
+
+    autoTable(doc, {
+
+      startY: 50,
+
+      head: [
+        [
+          'Fecha',
+          'Estado',
+          'Cartas'
+        ]
+      ],
+
+      body: rows.map(row => [
+        row.fecha,
+        row.estado,
+        String(row.cartas)
+      ]),
+
+      styles: {
+        fontSize: 10,
+        cellPadding: 3
+      },
+
+      headStyles: {
+        fillColor: [37, 99, 235]
+      },
+
+      columnStyles: {
+        2: { halign: 'center' }
+      }
+
+    });
+
+    const total = rows.reduce(
+      (sum, row) => sum + row.cartas,
+      0
+    );
+
+    const afterTable = (doc as unknown as {
+      lastAutoTable: { finalY: number };
+    }).lastAutoTable.finalY + 12;
+
+    doc.setFontSize(12);
+
+    doc.text(
+      `Total de cartas: ${total}`,
+      14,
+      afterTable
+    );
+
+    const baseName =
+      this.courseName()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '') ||
+      courseId;
+
+    doc.save(`reporte-${baseName}.pdf`);
 
   }
 

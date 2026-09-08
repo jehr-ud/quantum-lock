@@ -31,7 +31,9 @@ import {
 import {
   AttendanceExportRow,
   StudentInfo,
+  StudentReportRow,
   buildExportRows,
+  buildStudentReportRows,
   computeRewardCounts,
   countDistinctStudents
 } from '../utils/domain';
@@ -131,6 +133,48 @@ export class AttendanceService {
         }
 
       }
+    );
+
+  }
+
+  /**
+   * RQ08 — Recupera la asistencia del estudiante en el
+   * curso seleccionado y la convierte en las filas del
+   * reporte por curso (fecha, estado y cartas obtenidas).
+   */
+  async getStudentCourseReport(
+    studentUid: string,
+    courseId: string
+  ): Promise<StudentReportRow[]> {
+
+    const q = query(
+
+      collection(
+        firestore,
+        Collections.ATTENDANCES
+      ),
+
+      where(
+        'studentUid',
+        '==',
+        studentUid
+      ),
+
+      where(
+        'courseId',
+        '==',
+        courseId
+      )
+
+    );
+
+    const snapshot =
+      await getDocs(q);
+
+    return buildStudentReportRows(
+      snapshot.docs.map(document =>
+        document.data() as Attendance
+      )
     );
 
   }

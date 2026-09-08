@@ -63,6 +63,66 @@ header p {
 
 }
 
+.header-actions {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 16px;
+
+}
+
+.report {
+
+    border: none;
+
+    padding: 12px 20px;
+
+    border-radius: 12px;
+
+    background: #2563eb;
+
+    color: white;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background .2s,
+        opacity .2s;
+
+}
+
+.report:hover:not(:disabled) {
+
+    background: #1d4ed8;
+
+}
+
+.report:disabled {
+
+    opacity: .6;
+
+    cursor: default;
+
+}
+
+.report-error {
+
+    margin: 16px 0 0;
+
+    padding: 12px 16px;
+
+    border-radius: 12px;
+
+    background: #fee2e2;
+
+    color: #b91c1c;
+
+}
+
 .progress-card {
 
     max-width: 1200px;
