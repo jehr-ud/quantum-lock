@@ -77,19 +77,50 @@ export class AuthService {
 
 }
 
-  waitForAuthState(): Promise<FirebaseUser | null> {
+  async waitForAuthState(): Promise<FirebaseUser | null> {
 
-  return new Promise(resolve => {
+  const started = Date.now();
 
-    const unsubscribe = onAuthStateChanged(auth, user => {
+  const settleTimeoutMs = 2000;
 
-      unsubscribe();
+  while (Date.now() - started < settleTimeoutMs) {
 
-      resolve(user);
+    const firebaseUser = auth.currentUser;
 
-    });
+    if (firebaseUser) {
 
-  });
+      if (this.currentUser()?.uid !== firebaseUser.uid) {
+
+        try {
+
+          const user = await this.getUser(firebaseUser.uid);
+
+          this.currentUser.set(user);
+
+        } catch {
+
+          // La lectura del perfil pudo fallar por red o reglas;
+          // la sesión de Firebase sigue siendo válida.
+
+        }
+
+      }
+
+      this.initialized.set(true);
+
+      return firebaseUser;
+
+    }
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+  }
+
+  this.initialized.set(true);
+
+  this.currentUser.set(null);
+
+  return null;
 
 }
 

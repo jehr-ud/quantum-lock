@@ -27,6 +27,7 @@ import { Timestamp } from 'firebase/firestore';
 import { QuantumLock } from '../../../../shared/components/quantum/quantum-lock/quantum-lock';
 import { ClassSession } from '../../../../models/class-session';
 import { Course } from '../../../../models/course';
+import { User } from '../../../../models/user';
 import { ClassSessionService } from '../../../../core/services/class-session.service';
 import { AttendanceService } from '../../../../core/services/attendance.service';
 import { CourseService } from '../../../../core/services/course.service';
@@ -347,7 +348,7 @@ export class Session implements OnDestroy {
   ): Promise<void> {
 
     const user =
-      this.auth.currentUser();
+      await this.resolveCurrentUser();
 
     if (!user) {
 
@@ -458,6 +459,30 @@ export class Session implements OnDestroy {
   }
 
   /**
+   * RQ06/RQ09 — Devuelve el usuario autenticado. Si la
+   * señal `currentUser` está momentáneamente en `null`
+   * por un re-sync del SDK de Firebase, primero espera
+   * a que el estado de autenticación quede establecido.
+   */
+  private async resolveCurrentUser(): Promise<User | null> {
+
+    let user =
+      this.auth.currentUser();
+
+    if (!user) {
+
+      await this.auth.waitForAuthState();
+
+      user =
+        this.auth.currentUser();
+
+    }
+
+    return user;
+
+  }
+
+  /**
    * RQ06 — Revalida el estado de la sesión justo antes
    * de aceptar la resolución del Quantum Lock.
    */
@@ -509,7 +534,7 @@ export class Session implements OnDestroy {
   async solved() {
 
     const user =
-      this.auth.currentUser();
+      await this.resolveCurrentUser();
 
     if (!user) {
 
@@ -572,7 +597,7 @@ export class Session implements OnDestroy {
   async failed() {
 
     const user =
-      this.auth.currentUser();
+      await this.resolveCurrentUser();
 
     const session =
       this.activeSession();
