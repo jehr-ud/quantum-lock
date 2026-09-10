@@ -11,14 +11,27 @@ import {
   Router
 } from '@angular/router';
 
+import {
+  filter,
+  firstValueFrom,
+  map,
+  take
+} from 'rxjs';
+
+import {
+  toObservable
+} from '@angular/core/rxjs-interop';
+
 import { Timestamp } from 'firebase/firestore';
 
 import { QuantumLock } from '../../../../shared/components/quantum/quantum-lock/quantum-lock';
 import { ClassSession } from '../../../../models/class-session';
+import { Course } from '../../../../models/course';
 import { ClassSessionService } from '../../../../core/services/class-session.service';
 import { AttendanceService } from '../../../../core/services/attendance.service';
+import { CourseService } from '../../../../core/services/course.service';
 import { AuthService } from '../../../../core/services/auth.service';
-import { isSessionUsable } from '../../../../core/utils/domain';
+import { isSessionUsable, isWithinSchedule } from '../../../../core/utils/domain';
 
 @Component({
   selector: 'app-student-session',
@@ -48,6 +61,14 @@ export class Session implements OnDestroy {
   private readonly attendanceService =
     inject(AttendanceService);
 
+  private readonly courseService =
+    inject(CourseService);
+
+  private readonly courses$ =
+    toObservable(
+      this.courseService.courses
+    );
+
   readonly loading =
     signal(true);
 
@@ -61,6 +82,18 @@ export class Session implements OnDestroy {
   readonly loadError = signal('');
 
   readonly unavailable = signal(false);
+
+  /**
+   * RQ09 — La fecha/hora actual en Colombia está fuera
+   * del horario de clase del curso.
+   */
+  readonly outsideSchedule = signal(false);
+
+  /**
+   * RQ09 — La asistencia ya fue registrada al presionar
+   * "Comenzar". El Quantum Lock solo se habilita después.
+   */
+  readonly attended = signal(false);
 
   readonly shaking = signal(false);
 
@@ -117,7 +150,13 @@ export class Session implements OnDestroy {
 
     }
 
-    return this.activeSession() !== null;
+    if (this.outsideSchedule()) {
+
+      return false;
+
+    }
+
+    return this.activeSession() !== null && this.attended();
 
   });
 
@@ -177,6 +216,10 @@ export class Session implements OnDestroy {
 
     this.error.set('');
 
+    this.outsideSchedule.set(false);
+
+    this.attended.set(false);
+
     try {
 
       const session =
@@ -187,6 +230,25 @@ export class Session implements OnDestroy {
       this.session.set(session);
 
       if (session) {
+
+        const course =
+          await this.resolveCourse(session.courseId);
+
+        const withinSchedule =
+          isWithinSchedule(
+            course?.schedule,
+            Date.now()
+          );
+
+        if (!withinSchedule) {
+
+          this.outsideSchedule.set(true);
+
+          return;
+
+        }
+
+        await this.registerAttendance(session);
 
         this.startTimer(session);
 
@@ -238,6 +300,82 @@ export class Session implements OnDestroy {
   retry() {
 
     this.load();
+
+  }
+
+  /**
+   * RQ09 — Resuelve el curso de la sesión. Si la lista
+   * de cursos aún no se ha cargado, espera a que la
+   * información esté disponible para decidir sobre el
+   * horario de clase.
+   */
+  private async resolveCourse(
+    courseId: string
+  ): Promise<Course | undefined> {
+
+    const existing =
+      this.courseService.courses()
+        .find(course => course.id === courseId);
+
+    if (existing) {
+
+      return existing;
+
+    }
+
+    return firstValueFrom(
+      this.courses$.pipe(
+        filter(courses => courses.length > 0),
+        map(courses =>
+          courses.find(course =>
+            course.id === courseId
+          )
+        ),
+        take(1)
+      )
+    );
+
+  }
+
+  /**
+   * RQ09 — Registra la asistencia en el momento en que
+   * el estudiante entra a la sesión ("Comenzar"). Solo
+   * habilita el Quantum Lock si el registro es exitoso.
+   */
+  private async registerAttendance(
+    session: ClassSession
+  ): Promise<void> {
+
+    const user =
+      this.auth.currentUser();
+
+    if (!user) {
+
+      return;
+
+    }
+
+    try {
+
+      await this.attendanceService.attend(
+        session,
+        user.uid
+      );
+
+      this.attended.set(true);
+
+    } catch (error) {
+
+      console.error(
+        'Error registrando asistencia:',
+        error
+      );
+
+      this.error.set(
+        'No fue posible registrar tu asistencia. Inténtalo nuevamente.'
+      );
+
+    }
 
   }
 

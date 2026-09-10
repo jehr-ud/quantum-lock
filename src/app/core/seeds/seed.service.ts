@@ -57,6 +57,23 @@ export class SeedService {
                 console.log('Existe:', snapshot.exists());
 
                 if (snapshot.exists()) {
+
+                    const data = snapshot.data();
+
+                    if (!data?.['schedule']) {
+
+                        await setDoc(
+                            ref,
+                            {
+                                schedule: course.schedule
+                            },
+                            { merge: true }
+                        );
+
+                        console.log('Horario actualizado:', course.id);
+
+                    }
+
                     continue;
                 }
 

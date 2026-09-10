@@ -1,4 +1,5 @@
 import { Attendance } from '../../models/attendance';
+import { CourseScheduleSlot } from '../../models/course';
 import { SessionStatus } from '../enums/session-status';
 
 export interface AttendanceExportRow {
@@ -18,6 +19,110 @@ export interface StudentReportRow {
   fecha: string;
   estado: 'Resolvió' | 'Falló';
   cartas: number;
+}
+
+/**
+ * RQ09 — Obtiene el día de la semana y los minutos del
+ * día en la zona horaria de Colombia (America/Bogota,
+ * UTC-5 sin horario de verano).
+ */
+export function getColombiaTimeParts(
+  now: number
+): {
+  day: number;
+  minutes: number;
+} {
+
+  const parts = new Intl.DateTimeFormat(
+    'en-US',
+    {
+      timeZone: 'America/Bogota',
+      weekday: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }
+  ).formatToParts(new Date(now));
+
+  const values: Record<string, string> = {};
+
+  for (const part of parts) {
+
+    values[part.type] = part.value;
+
+  }
+
+  const dayMap: Record<string, number> = {
+    Sun: 0,
+    Mon: 1,
+    Tue: 2,
+    Wed: 3,
+    Thu: 4,
+    Fri: 5,
+    Sat: 6
+  };
+
+  let hour = Number(values['hour']);
+
+  if (hour === 24) {
+
+    hour = 0;
+
+  }
+
+  return {
+    day: dayMap[values['weekday']] ?? 0,
+    minutes:
+      hour * 60 +
+      (Number(values['minute']) || 0)
+  };
+
+}
+
+/**
+ * RQ09 — Convierte una hora en formato 'HH:mm' a los
+ * minutos transcurridos desde medianoche.
+ */
+export function minutesOfDay(
+  time: string
+): number {
+
+  const [hours, minutes] = time
+    .split(':')
+    .map(Number);
+
+  return (hours || 0) * 60 + (minutes || 0);
+
+}
+
+/**
+ * RQ09 — Determina si una fecha/hora en Colombia cae
+ * dentro de alguno de los bloques de horario del curso.
+ * Un curso sin horario definido no restringe la
+ * participación.
+ */
+export function isWithinSchedule(
+  schedule: CourseScheduleSlot[] | null | undefined,
+  now: number
+): boolean {
+
+  if (!schedule || schedule.length === 0) {
+
+    return true;
+
+  }
+
+  const { day, minutes } =
+    getColombiaTimeParts(now);
+
+  return schedule.some(slot =>
+
+    slot.day === day &&
+    minutes >= minutesOfDay(slot.start) &&
+    minutes < minutesOfDay(slot.end)
+
+  );
+
 }
 
 /**

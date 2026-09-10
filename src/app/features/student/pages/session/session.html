@@ -72,6 +72,37 @@
 
 </div>
 
+}@else if(outsideSchedule()){
+
+<div class="empty">
+
+    <div class="icon">
+
+        ⏳
+
+    </div>
+
+    <h2>
+
+        La sesión aún no ha comenzado
+
+    </h2>
+
+    <p>
+
+        No te encuentras dentro del horario de clase.
+        Espera a que el profesor inicie la sesión.
+
+    </p>
+
+    <button class="retry" (click)="retry()">
+
+        Revisar sesión
+
+    </button>
+
+</div>
+
 }@else if(!session()){
 
 <div class="empty">
@@ -222,8 +253,8 @@
 
     <p>
 
-        ✔ Cuando todas las agujas coincidan con el patrón,
-        tu asistencia será registrada automáticamente.
+        ✔ Tu asistencia quedó registrada al ingresar.
+        Completa el patrón para obtener tu recompensa.
 
     </p>
 

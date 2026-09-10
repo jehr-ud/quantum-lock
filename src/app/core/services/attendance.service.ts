@@ -272,6 +272,60 @@ export class AttendanceService {
 
   }
 
+  /**
+   * RQ09 — Registra la asistencia cuando el estudiante
+   * presiona "Comenzar", siempre que exista una sesión
+   * del maestro activa. La resolución del Quantum Lock
+   * es un evento independiente: si el documento ya
+   * existe (múltiples accesos) no se crea otro.
+   */
+  async attend(
+    session: ClassSession,
+    studentUid: string
+  ): Promise<void> {
+
+    this.assertSessionAvailable(session);
+
+    const id =
+      `${session.id}_${studentUid}`;
+
+    const ref = doc(
+      firestore,
+      Collections.ATTENDANCES,
+      id
+    );
+
+    const snapshot =
+      await getDoc(ref);
+
+    if (snapshot.exists()) {
+
+      return;
+
+    }
+
+    await setDoc(ref, {
+
+      id,
+
+      sessionId: session.id,
+
+      courseId: session.courseId,
+
+      studentUid,
+
+      registeredAt: serverTimestamp(),
+
+      attempts: 0,
+
+      solved: false,
+
+      rewardClaimed: false
+
+    });
+
+  }
+
   async register(
     session: ClassSession,
     studentUid: string
