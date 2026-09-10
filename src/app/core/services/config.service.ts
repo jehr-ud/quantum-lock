@@ -8,6 +8,8 @@ import {
 import { firestore } from '../firebase/firebase';
 import { auth } from '../firebase/firebase';
 
+import { Collections } from '../constants/firestore.collections';
+
 import { AppConfiguration } from '../../models/app-config';
 
 @Injectable({
@@ -26,8 +28,8 @@ export class ConfigService {
 
       doc(
         firestore,
-        'config',
-        'app'
+        Collections.SETTINGS,
+        'application'
       )
 
     );

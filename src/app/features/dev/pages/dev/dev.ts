@@ -39,7 +39,7 @@ export class Dev {
 
     try {
 
-      await this.seedService.seedCourses();
+      await this.seedService.seedConfig();
 
       alert('Configuración creada.');
 

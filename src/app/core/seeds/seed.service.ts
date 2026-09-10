@@ -111,23 +111,17 @@ export class SeedService {
 
             console.log('Existe:', snapshot.exists());
 
-            if (snapshot.exists()) {
-
-                console.log('Configuración ya existe');
-
-                return;
-
-            }
-
             await setDoc(
 
                 ref,
 
-                SEED.config
+                SEED.config,
+
+                { merge: true }
 
             );
 
-            console.log('Configuración creada');
+            console.log('Configuración sincronizada');
 
         } catch (e) {
 
