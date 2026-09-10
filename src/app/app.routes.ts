@@ -47,7 +47,7 @@ export const routes: Routes = [
 
   {
     path: 'dev',
-    //  canActivate: [teacherGuard],
+    canActivate: [teacherGuard],
     loadComponent: () =>
       import('./features/dev/pages/dev/dev')
         .then(m => m.Dev)
