@@ -153,13 +153,22 @@ export class Dashboard {
 
     try {
 
-      const rows =
-        await this.attendanceService.getCourseAttendance(
-          course.id
-        );
+      const [rows, summary] =
+        await Promise.all([
+
+          this.attendanceService.getCourseAttendance(
+            course.id
+          ),
+
+          this.attendanceService.getCourseStudentSummary(
+            course.id
+          )
+
+        ]);
 
       this.downloadReport(
         rows,
+        summary,
         course
       );
 
@@ -188,6 +197,11 @@ export class Dashboard {
       estudiante: string;
       correo: string;
       abrioSobre: string;
+    }[],
+    summary: {
+      nombre: string;
+      correo: string;
+      sobres: number;
     }[],
     course: Course
   ) {
@@ -219,6 +233,30 @@ export class Dashboard {
       { wch: 12 }
     ];
 
+    const summaryHeader = [
+      'Nombre',
+      'Correo',
+      'Cantidad de sobres'
+    ];
+
+    const summaryData = summary.map(row => [
+      row.nombre,
+      row.correo,
+      row.sobres
+    ]);
+
+    const summaryWorksheet =
+      XLSX.utils.aoa_to_sheet([
+        summaryHeader,
+        ...summaryData
+      ]);
+
+    summaryWorksheet['!cols'] = [
+      { wch: 34 },
+      { wch: 34 },
+      { wch: 18 }
+    ];
+
     const workbook =
       XLSX.utils.book_new();
 
@@ -226,6 +264,12 @@ export class Dashboard {
       workbook,
       worksheet,
       'Asistencia'
+    );
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      summaryWorksheet,
+      'Resumen por estudiante'
     );
 
     const data =

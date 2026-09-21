@@ -6,6 +6,7 @@ import { SessionStatus } from '../enums/session-status';
 import {
   buildExportRows,
   buildStudentReportRows,
+  buildStudentSummaryRows,
   computeRewardCounts,
   countDistinctStudents,
   formatExportDate,
@@ -452,6 +453,146 @@ describe('buildExportRows', () => {
       buildExportRows(records, users);
 
     expect(rows).toHaveLength(records.length);
+
+  });
+
+});
+
+describe('buildStudentSummaryRows', () => {
+
+  const users = {
+    a: {
+      firstName: 'Ana',
+      lastName: 'García',
+      email: 'agarcia@udistrital.edu.co'
+    },
+    b: {
+      firstName: 'Luis',
+      lastName: 'Pérez',
+      email: 'lperez@udistrital.edu.co'
+    }
+  };
+
+  it('genera una fila por estudiante con la cantidad de sobres', () => {
+
+    const records = [
+      attendance({
+        studentUid: 'a',
+        rewardClaimed: true,
+        rewardId: 'sp-001'
+      }),
+      attendance({
+        studentUid: 'a',
+        rewardClaimed: true,
+        rewardId: 'sp-002'
+      }),
+      attendance({
+        studentUid: 'b',
+        rewardClaimed: false,
+        rewardId: ''
+      })
+    ];
+
+    const rows =
+      buildStudentSummaryRows(records, users);
+
+    expect(rows).toHaveLength(2);
+
+    expect(rows[0]).toEqual({
+      nombre: 'Ana García',
+      correo: 'agarcia@udistrital.edu.co',
+      sobres: 2
+    });
+
+    expect(rows[1]).toEqual({
+      nombre: 'Luis Pérez',
+      correo: 'lperez@udistrital.edu.co',
+      sobres: 0
+    });
+
+  });
+
+  it('cuenta las cartas duplicadas en el total de sobres', () => {
+
+    const records = [
+      attendance({
+        studentUid: 'a',
+        rewardClaimed: true,
+        rewardId: 'sp-001'
+      }),
+      attendance({
+        studentUid: 'a',
+        rewardClaimed: true,
+        rewardId: 'sp-001'
+      }),
+      attendance({
+        studentUid: 'a',
+        rewardClaimed: true,
+        rewardId: 'sp-003'
+      })
+    ];
+
+    const rows =
+      buildStudentSummaryRows(records, users);
+
+    expect(rows[0].sobres).toBe(3);
+
+  });
+
+  it('no cuenta sobres no reclamados', () => {
+
+    const records = [
+      attendance({
+        studentUid: 'a',
+        rewardClaimed: false,
+        rewardId: 'sp-001'
+      }),
+      attendance({
+        studentUid: 'b',
+        rewardClaimed: false,
+        rewardId: ''
+      })
+    ];
+
+    const rows =
+      buildStudentSummaryRows(records, users);
+
+    expect(rows[0].sobres).toBe(0);
+
+    expect(rows[1].sobres).toBe(0);
+
+  });
+
+  it('ordena las filas por nombre', () => {
+
+    const records = [
+      attendance({
+        studentUid: 'b',
+        rewardClaimed: true,
+        rewardId: 'sp-001'
+      }),
+      attendance({
+        studentUid: 'a',
+        rewardClaimed: true,
+        rewardId: 'sp-002'
+      })
+    ];
+
+    const rows =
+      buildStudentSummaryRows(records, users);
+
+    expect(rows[0].nombre).toBe('Ana García');
+
+    expect(rows[1].nombre).toBe('Luis Pérez');
+
+  });
+
+  it('devuelve vacío sin registros', () => {
+
+    const rows =
+      buildStudentSummaryRows([], users);
+
+    expect(rows).toEqual([]);
 
   });
 

@@ -48,6 +48,20 @@ Multiple Quantum Lock attempts by the same student during the same session shall
 
 If the selected course has no attendance records, the system shall generate an empty report with the expected columns or display an appropriate message.
 
+### RF-010 — Consolidated per-student sheet
+
+The Excel report shall include a second sheet consolidating, per student, the total quantity of reward envelopes opened in the selected course.
+
+The consolidated sheet shall contain exactly three columns:
+
+| Column | Description |
+|---|---|
+| Nombre | Student full name |
+| Correo | Student institutional email |
+| Cantidad de sobres | Total quantity of envelopes opened (cards obtained), counting duplicates |
+
+The quantity shall count every attendance record of the course in which the student successfully opened the reward envelope. Duplicate cards are counted individually, consistent with the existing reward rules.
+
 ## Report Columns
 
 | Column | Description |
@@ -67,6 +81,7 @@ The `Abrió sobre` value shall clearly distinguish successful and unsuccessful c
 4. Opening the envelope represents successful completion of the reward flow.
 5. Duplicate Quantum Lock attempts do not create duplicate attendance rows.
 6. The report must not include attendance from other courses.
+7. The consolidated sheet counts every opened reward envelope per student, including duplicate cards, using the existing reward/envelope state (`rewardClaimed`).
 
 ## Acceptance Criteria
 
@@ -93,6 +108,12 @@ Then the student shall appear only once for that session.
 Given attendance exists for multiple courses
 When the teacher exports Course A
 Then records from Course B shall not be included.
+
+### Scenario 5 — Consolidated per-student quantities
+
+Given students opened the reward envelope once or several times during sessions of the course (including duplicate cards)
+When the teacher exports the course attendance
+Then the consolidated sheet shows one row per student with `Nombre`, `Correo`, and the total `Cantidad de sobres` counting every opened envelope, including duplicates.
 
 ## Error Scenarios
 

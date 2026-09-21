@@ -32,8 +32,10 @@ import {
   AttendanceExportRow,
   StudentInfo,
   StudentReportRow,
+  StudentSummaryRow,
   buildExportRows,
   buildStudentReportRows,
+  buildStudentSummaryRows,
   computeRewardCounts,
   countDistinctStudents
 } from '../utils/domain';
@@ -188,6 +190,50 @@ export class AttendanceService {
     courseId: string
   ): Promise<AttendanceExportRow[]> {
 
+    const {
+      attendances,
+      usersById
+    } = await this.getCourseData(courseId);
+
+    return buildExportRows(
+      attendances,
+      usersById
+    );
+
+  }
+
+  /**
+   * RQ05 — Consolida por estudiante la cantidad de sobres
+   * abiertos (cartas, contando duplicados) en el curso
+   * seleccionado.
+   */
+  async getCourseStudentSummary(
+    courseId: string
+  ): Promise<StudentSummaryRow[]> {
+
+    const {
+      attendances,
+      usersById
+    } = await this.getCourseData(courseId);
+
+    return buildStudentSummaryRows(
+      attendances,
+      usersById
+    );
+
+  }
+
+  /**
+   * RQ05 — Recupera las asistencias del curso y la
+   * información de los estudiantes para los reportes.
+   */
+  private async getCourseData(
+    courseId: string
+  ): Promise<{
+    attendances: Attendance[];
+    usersById: Record<string, StudentInfo>;
+  }> {
+
     const attendanceQuery = query(
 
       collection(
@@ -233,10 +279,10 @@ export class AttendanceService {
 
     }
 
-    return buildExportRows(
+    return {
       attendances,
       usersById
-    );
+    };
 
   }
 

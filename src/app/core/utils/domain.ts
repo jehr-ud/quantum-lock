@@ -9,6 +9,16 @@ export interface AttendanceExportRow {
   abrioSobre: 'Sí' | 'No';
 }
 
+/**
+ * RQ05 — Fila consolidada por estudiante: cuántos sobres
+ * (cartas, contando duplicados) abrió en el curso.
+ */
+export interface StudentSummaryRow {
+  nombre: string;
+  correo: string;
+  sobres: number;
+}
+
 export interface StudentInfo {
   firstName?: string;
   lastName?: string;
@@ -293,6 +303,72 @@ export function buildExportRows(
     })
     .sort((a, b) =>
       a.fecha.localeCompare(b.fecha)
+    );
+
+}
+
+/**
+ * RQ05 — Consolida por estudiante la cantidad de sobres
+ * abiertos (cartas obtenidas, contando duplicados) en el
+ * curso. Cada asistencia con el sobre abierto suma un
+ * sobre, reflejando el estado de recompensa.
+ */
+export function buildStudentSummaryRows(
+  attendances: Attendance[],
+  usersById: Record<string, StudentInfo>
+): StudentSummaryRow[] {
+
+  const byUid = new Map<string, StudentSummaryRow>();
+
+  for (const attendance of attendances) {
+
+    if (!attendance.studentUid) {
+
+      continue;
+
+    }
+
+    const user =
+      usersById[attendance.studentUid];
+
+    let row =
+      byUid.get(attendance.studentUid);
+
+    if (!row) {
+
+      row = {
+        nombre: user
+          ? [
+              user.firstName,
+              user.lastName
+            ]
+            .filter(Boolean)
+            .join(' ')
+            .trim()
+          : '',
+        correo: user?.email ?? '',
+        sobres: 0
+      };
+
+      byUid.set(
+        attendance.studentUid,
+        row
+      );
+
+    }
+
+    if (attendance.rewardClaimed) {
+
+      row.sobres += 1;
+
+    }
+
+  }
+
+  return Array
+    .from(byUid.values())
+    .sort((a, b) =>
+      a.nombre.localeCompare(b.nombre)
     );
 
 }
