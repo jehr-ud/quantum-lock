@@ -25,6 +25,9 @@ export class QuantumLock {
   readonly interactive =
     input(false);
 
+  readonly disabled =
+    input(false);
+
   readonly solved = output<void>();
   readonly failed = output<void>();
 
@@ -131,6 +134,15 @@ export class QuantumLock {
     step: number
   ) {
 
+    if (
+      !this.interactive() ||
+      this.disabled()
+    ) {
+
+      return;
+
+    }
+
     const positions = [
 
       ...this.currentPositions()
@@ -146,6 +158,12 @@ export class QuantumLock {
     );
 
     this.currentPositions.set(positions);
+
+    if (!this.isSolved()) {
+
+      this.failed.emit();
+
+    }
 
   }
 

@@ -212,11 +212,14 @@ export class ClassSessionService {
 
   private generateQuantumLock(): QuantumLock {
 
+    const size =
+      this.config.config()?.quantumLockSize ?? 5;
+
     return {
 
       positions: Array.from(
 
-        { length: 5 },
+        { length: size },
 
         () => this.randomDirection()
 

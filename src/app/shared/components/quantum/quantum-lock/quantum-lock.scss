@@ -88,6 +88,17 @@ svg {
 
 }
 
+.dial.interactive.dial.disabled,
+.dial.disabled{
+
+    cursor:not-allowed;
+
+    opacity:.55;
+
+    transform:none !important;
+
+}
+
 .dial.interactive:hover{
 
     transform:scale(1.08);

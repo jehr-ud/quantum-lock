@@ -2,7 +2,7 @@
 
     @for(rotation of rotations(); track $index){
 
-    <div class="dial" [class.interactive]="interactive()" (click)="rotateClockwise($index)" (contextmenu)="rotateCounterClockwise($index, $event)">
+    <div class="dial" [class.interactive]="interactive()" [class.disabled]="disabled()" (click)="rotateClockwise($index)" (contextmenu)="rotateCounterClockwise($index, $event)">
 
         <svg viewBox="0 0 120 120">
 

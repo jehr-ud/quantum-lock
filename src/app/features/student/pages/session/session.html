@@ -231,9 +231,29 @@
 
 </section>
 
+<section class="information">
+
+    <div class="info">
+
+        <span>
+
+            Intentos fallidos
+
+        </span>
+
+        <strong>
+
+            {{ attempts() }} / {{ maxAttempts() }}
+
+        </strong>
+
+    </div>
+
+</section>
+
 <section class="lock" [class.shake]="shaking()">
 
-    <app-quantum-lock [lock]="session()!.quantumLock" [interactive]="interactive()" (solved)="solved()" (failed)="failed()">
+    <app-quantum-lock [lock]="session()!.quantumLock" [interactive]="interactive()" [disabled]="attemptsExhausted()" (solved)="solved()" (failed)="failed()">
 
     </app-quantum-lock>
 

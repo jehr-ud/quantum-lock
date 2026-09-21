@@ -32,6 +32,7 @@ import { ClassSessionService } from '../../../../core/services/class-session.ser
 import { AttendanceService } from '../../../../core/services/attendance.service';
 import { CourseService } from '../../../../core/services/course.service';
 import { AuthService } from '../../../../core/services/auth.service';
+import { ConfigService } from '../../../../core/services/config.service';
 import { isSessionUsable, isWithinSchedule } from '../../../../core/utils/domain';
 
 @Component({
@@ -65,6 +66,9 @@ export class Session implements OnDestroy {
   private readonly courseService =
     inject(CourseService);
 
+  private readonly config =
+    inject(ConfigService);
+
   private readonly courses$ =
     toObservable(
       this.courseService.courses
@@ -90,11 +94,14 @@ export class Session implements OnDestroy {
    */
   readonly outsideSchedule = signal(false);
 
-  /**
-   * RQ09 — La asistencia ya fue registrada al presionar
-   * "Comenzar". El Quantum Lock solo se habilita después.
-   */
   readonly attended = signal(false);
+
+  /**
+   * Intentos fallidos registrados para la sesión actual.
+   * La fuente de verdad es el documento de asistencia en
+   * Firestore; esta señal se inicializa desde él.
+   */
+  readonly attempts = signal(0);
 
   readonly shaking = signal(false);
 
@@ -161,6 +168,26 @@ export class Session implements OnDestroy {
 
   });
 
+  /**
+   * Límite de intentos fallidos definido en la
+   * configuración de la aplicación.
+   */
+  readonly maxAttempts = computed(() =>
+
+    this.config.config()?.maxAttempts ?? 3
+
+  );
+
+  /**
+   * El estudiante agotó el máximo de intentos fallidos:
+   * el Quantum Lock queda bloqueado sin revelar el patrón.
+   */
+  readonly attemptsExhausted = computed(() =>
+
+    this.attempts() >= this.maxAttempts()
+
+  );
+
   readonly timerClass = computed(() => {
 
     const seconds = this.remainingSeconds();
@@ -221,11 +248,11 @@ export class Session implements OnDestroy {
 
     this.attended.set(false);
 
+    this.attempts.set(0);
+
     try {
 
-      const session =
-
-        await this.sessionService
+      const session = await this.sessionService
           .findActiveSession(this.courseId);
 
       this.session.set(session);
@@ -361,6 +388,16 @@ export class Session implements OnDestroy {
       await this.attendanceService.attend(
         session,
         user.uid
+      );
+
+      const attendance =
+        await this.attendanceService.getAttendance(
+          session.id,
+          user.uid
+        );
+
+      this.attempts.set(
+        attendance?.attempts ?? 0
       );
 
       this.attended.set(true);
@@ -638,6 +675,21 @@ export class Session implements OnDestroy {
 
       this.error.set(
         'No fue posible registrar tu intento. Inténtalo nuevamente.'
+      );
+
+      return;
+
+    }
+
+    const attempts =
+      this.attempts() + 1;
+
+    this.attempts.set(attempts);
+
+    if (this.attemptsExhausted()) {
+
+      this.error.set(
+        `Alcanzaste el máximo de ${this.maxAttempts()} intentos. Tu asistencia quedó registrada.`
       );
 
       return;
