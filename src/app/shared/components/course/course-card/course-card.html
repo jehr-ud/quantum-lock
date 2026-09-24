@@ -48,6 +48,18 @@
 
         }
 
+        @if(tertiaryActionText()){
+
+            <button
+                class="secondary"
+                (click)="tertiaryAction.emit(course())">
+
+                {{ tertiaryActionText() }}
+
+            </button>
+
+        }
+
     </div>
 
 </div>

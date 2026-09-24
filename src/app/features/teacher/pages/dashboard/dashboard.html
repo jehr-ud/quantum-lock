@@ -54,7 +54,11 @@
 
         secondaryActionText="Exportar asistencia"
 
-        (secondaryAction)="exportAttendance($event)">
+        (secondaryAction)="exportAttendance($event)"
+
+        tertiaryActionText="Asignar sobre"
+
+        (tertiaryAction)="openAssignReward($event)">
 
     </app-course-list>
 
@@ -71,5 +75,29 @@
         (close)="closeDialog()">
 
     </app-session-created-dialog>
+
+}
+
+@if(rewardCourse(); as course){
+
+    <app-manual-reward-dialog
+
+        [students]="students()"
+
+        [courseName]="course.name"
+
+        [courseId]="course.id"
+
+        [assigning]="assigningReward()"
+
+        [error]="assignError()"
+
+        [searchError]="rewardSearchError()"
+
+        (assign)="assignReward($event)"
+
+        (close)="closeAssignReward()">
+
+    </app-manual-reward-dialog>
 
 }

@@ -39,6 +39,8 @@ import {
   computeRewardCounts,
   countDistinctStudents
 } from '../utils/domain';
+import { User } from '../../models/user';
+import { UserRole } from '../enums/user-role';
 
 @Injectable({
   providedIn: 'root'
@@ -649,6 +651,124 @@ export class AttendanceService {
     };
 
   }
+  /**
+   * RQ10 — Asigna manualmente un sobre con una carta
+   * aleatoria a un estudiante en un curso, sin requerir
+   * una sesión de clase. La recompensa se cuenta de
+   * inmediato (rewardClaimed). La fecha de asistencia
+   * la indica el profesor para reponer esa asistencia.
+   */
+  async assignManualReward(
+    courseId: string,
+    studentUid: string,
+    teacherUid: string,
+    registeredAt: Date
+  ): Promise<Attendance> {
+
+    const generatedId =
+      doc(
+        collection(
+          firestore,
+          Collections.ATTENDANCES
+        )
+      ).id;
+
+    const sessionId =
+      `manual_${generatedId}`;
+
+    const id =
+      `${sessionId}_${studentUid}`;
+
+    const reward =
+      this.selectRandomReward();
+
+    const attendance: Attendance = {
+
+      id,
+
+      sessionId,
+
+      courseId,
+
+      studentUid,
+
+      teacherUid,
+
+      registeredAt:
+        Timestamp.fromDate(registeredAt),
+
+      attempts: 0,
+
+      solved: true,
+
+      rewardClaimed: true,
+
+      rewardId: reward.id,
+
+      manual: true
+
+    };
+
+    await setDoc(
+
+      doc(
+        firestore,
+        Collections.ATTENDANCES,
+        id
+      ),
+
+      attendance
+
+    );
+
+    return attendance;
+
+  }
+
+  /**
+   * RQ10 — Obtiene todos los estudiantes (rol STUDENT)
+   * para que el profesor seleccione a quién asignar un
+   * sobre manualmente.
+   */
+  async getAllStudents(): Promise<User[]> {
+
+    const snapshot =
+      await getDocs(
+        collection(
+          firestore,
+          Collections.USERS
+        )
+      );
+
+    return snapshot.docs
+      .map(document =>
+        document.data() as User
+      )
+      .filter(user =>
+        user.role === UserRole.STUDENT
+      )
+      .sort((a, b) => {
+
+        const nameA =
+          [a.firstName, a.lastName]
+            .filter(Boolean)
+            .join(' ')
+            .trim()
+            .toLowerCase();
+
+        const nameB =
+          [b.firstName, b.lastName]
+            .filter(Boolean)
+            .join(' ')
+            .trim()
+            .toLowerCase();
+
+        return nameA.localeCompare(nameB);
+
+      });
+
+  }
+
   private selectRandomReward() {
 
 

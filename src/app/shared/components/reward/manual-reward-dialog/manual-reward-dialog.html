@@ -1,0 +1,134 @@
+<div class="overlay">
+
+    <div class="dialog">
+
+        <h2>
+
+            Asignar sobre
+
+        </h2>
+
+        <p>
+
+            Selecciona el estudiante que recibirá el sobre en
+
+            <strong>{{ courseName() }}</strong>
+
+        </p>
+
+        <div class="field">
+
+            <label for="attendance-date">
+
+                Fecha de asistencia
+
+            </label>
+
+            <input
+                id="attendance-date"
+                type="date"
+                [ngModel]="attendanceDate()"
+                (ngModelChange)="attendanceDate.set($event)"
+                [max]="todayIso()">
+
+            <small>
+
+                Fecha en la que el estudiante asistió o realizó la actividad.
+
+            </small>
+
+        </div>
+
+        <input
+            type="search"
+            placeholder="Buscar por nombre o correo..."
+            [ngModel]="search()"
+            (ngModelChange)="search.set($event)">
+
+        @if(error()){
+
+            <div class="error">
+
+                {{ error() }}
+
+            </div>
+
+        }
+
+        @if(searchError()){
+
+            <div class="error">
+
+                {{ searchError() }}
+
+            </div>
+
+        }
+
+        <div class="student-list">
+
+            @if(filteredStudents().length){
+
+                @for(student of filteredStudents(); track student.uid){
+
+                    <button
+                        type="button"
+                        class="student"
+                        (click)="confirm(student)"
+                        [disabled]="assigning() || !hasValidDate()">
+
+                        <div class="avatar">
+
+                            {{ student.firstName.charAt(0) }}
+
+                        </div>
+
+                        <div class="info">
+
+                            <span>
+
+                                {{ student.firstName }} {{ student.lastName }}
+
+                            </span>
+
+                            <small>
+
+                                {{ student.email }}
+
+                            </small>
+
+                        </div>
+
+                    </button>
+
+                }
+
+            }@else{
+
+                <div class="empty">
+
+                    No se encontraron estudiantes.
+
+                </div>
+
+            }
+
+        </div>
+
+        <div class="actions">
+
+            <button
+                type="button"
+                class="secondary"
+                (click)="close.emit()"
+                [disabled]="assigning()">
+
+                Cancelar
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>

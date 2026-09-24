@@ -10,4 +10,6 @@ export interface Attendance {
     rewardClaimed: boolean;
     solved: boolean;
     attempts: number;
+    teacherUid?: string;
+    manual?: boolean;
 }

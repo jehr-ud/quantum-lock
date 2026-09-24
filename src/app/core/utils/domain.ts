@@ -1,6 +1,7 @@
 import { Attendance } from '../../models/attendance';
 import { CourseScheduleSlot } from '../../models/course';
 import { SessionStatus } from '../enums/session-status';
+import { User } from '../../models/user';
 
 export interface AttendanceExportRow {
   fecha: string;
@@ -370,6 +371,44 @@ export function buildStudentSummaryRows(
     .sort((a, b) =>
       a.nombre.localeCompare(b.nombre)
     );
+
+}
+
+/**
+ * RQ10 — Filtra estudiantes por término de búsqueda
+ * (nombre completo o correo electrónico) para el
+ * selector de asignación manual de sobres.
+ */
+export function filterStudents(
+  students: User[],
+  term: string
+): User[] {
+
+  const query = term.trim().toLowerCase();
+
+  if (!query) {
+
+    return students;
+
+  }
+
+  return students.filter(student => {
+
+    const name =
+      [student.firstName, student.lastName]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+
+    const email =
+      (student.email ?? '').toLowerCase();
+
+    return (
+      name.includes(query) ||
+      email.includes(query)
+    );
+
+  });
 
 }
 

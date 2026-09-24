@@ -507,16 +507,29 @@ Documentos con ID compuesto `${sessionId}_${studentUid}`.
 | `sessionId` | string | Sesión a la que pertenece |
 | `courseId` | string | Curso de la sesión |
 | `studentUid` | string | Estudiante |
-| `registeredAt` | Timestamp | Momento del registro |
+| `registeredAt` | Timestamp | Momento del registro (RQ10: fecha de asistencia indicada por el profesor, convertida a Timestamp) |
 | `attempts` | number | Número de intentos almacenados |
 | `solved` | boolean | Si resolvió el Quantum Lock |
 | `rewardClaimed` | boolean | Si abrió/ reclamó el sobre (recompensa contada) |
 | `rewardId` | string | ID de la carta (por ejemplo `sp-001`) |
+| `teacherUid` | string (opcional) | Profesor que asignó el sobre (solo RQ10) |
+| `manual` | boolean (opcional) | `true` si el sobre fue asignado manualmente por el profesor (RQ10) |
 
 - **Quién lee:** estudiante (sesión, sobre, álbum, reporte), profesor (conteo de conectados, exportación).
-- **Quién escribe:** `AttendanceService` (`attend`, `register`, `registerFailedAttempt`, `claimReward`).
-- **Funcionalidad:** asistencia, intentos, resolución, recompensas, álbum, reportes, estudiantes conectados.
+- **Quién escribe:** `AttendanceService` (`attend`, `register`, `registerFailedAttempt`, `claimReward`, `assignManualReward`).
+- **Funcionalidad:** asistencia, intentos, resolución, recompensas, álbum, reportes, estudiantes conectados, asignación manual de sobres.
 - **Regla de unicidad:** un estudiante tiene **una sola** asistencia por sesión (ID compuesto); los reintentos no crean registros duplicados.
+
+**RQ10 — Sobres manuales**
+
+El profesor puede asignar un sobre con una carta aleatoria a un estudiante sin que exista una sesión de clase (útil cuando el estudiante no asistió pero realizó la actividad).
+
+- `sessionId` usa un ID sintético `manual_<generated>`; **no** se crea ni modifica ningún documento en `class-sessions`.
+- `solved: true` y `rewardClaimed: true` desde el inicio: la carta se cuenta de inmediato sin que el estudiante abra el sobre.
+- `manual: true` distingue la asignación manual de una asistencia por sesión.
+- En el diálogo **"Asignar sobre"** el profesor indica la **fecha de asistencia** (por defecto hoy, sin fechas futuras) con la que se persiste `registeredAt`; esto repone la asistencia en la fecha en la que el estudiante asistió o realizó la actividad, en lugar de la fecha en que se realiza la asignación.
+- La recompensa se cuenta como un sobre más en el álbum, el Excel (`RQ05`) y el reporte PDF del estudiante (`RQ08`, estado `Resolvió`).
+- **Seguridad:** solo un usuario con rol `TEACHER` puede crear documentos con `manual == true`; un estudiante nunca puede autoasignarse ni crear sobres manuales.
 
 ### 13.5 `settings`
 

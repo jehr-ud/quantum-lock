@@ -16,6 +16,8 @@ import { Course } from '../../../../models/course';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ClassSession } from '../../../../models/class-session';
 import { SessionCreatedDialog } from '../../../../shared/components/session/session-created-dialog/session-created-dialog';
+import { ManualRewardDialog } from '../../../../shared/components/reward/manual-reward-dialog/manual-reward-dialog';
+import { User } from '../../../../models/user';
 
 @Component({
   selector: 'app-dashboard',
@@ -23,7 +25,8 @@ import { SessionCreatedDialog } from '../../../../shared/components/session/sess
   imports: [
     CourseHeader,
     CourseList,
-    SessionCreatedDialog
+    SessionCreatedDialog,
+    ManualRewardDialog
   ],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss'
@@ -50,6 +53,133 @@ export class Dashboard {
    */
   readonly logouting = signal(false);
   readonly logoutError = signal('');
+
+  /**
+   * RQ10 — Estado de la acción de asignar un sobre
+   * manualmente a un estudiante.
+   */
+  readonly rewardCourse = signal<Course | null>(null);
+  readonly students = signal<User[]>([]);
+  readonly assigningReward = signal(false);
+  readonly rewardSearchError = signal('');
+  readonly assignError = signal('');
+
+  /**
+   * RQ10 — Abre el diálogo de asignación de sobre
+   * para el curso seleccionado y carga los
+   * estudiantes disponibles.
+   */
+  async openAssignReward(course: Course) {
+
+    this.rewardCourse.set(course);
+
+    this.assignError.set('');
+
+    this.rewardSearchError.set('');
+
+    try {
+
+      const students =
+        await this.attendanceService.getAllStudents();
+
+      this.students.set(students);
+
+    } catch (error) {
+
+      console.error(
+        'Error cargando estudiantes:',
+        error
+      );
+
+      this.rewardSearchError.set(
+        'No fue posible cargar la lista de estudiantes. Inténtalo nuevamente.'
+      );
+
+      this.students.set([]);
+
+    }
+
+  }
+
+  /**
+   * RQ10 — Asigna un sobre con una carta aleatoria al
+   * estudiante seleccionado en el curso activo, usando
+   * la fecha de asistencia indicada por el profesor para
+   * reponer la asistencia.
+   */
+  async assignReward(assignment: {
+    student: User;
+    attendanceDate: string;
+  }) {
+
+    const course = this.rewardCourse();
+
+    const user = this.auth.currentUser();
+
+    if (!course || !user || this.assigningReward()) {
+
+      return;
+
+    }
+
+    this.assigningReward.set(true);
+
+    this.assignError.set('');
+
+    try {
+
+      const registeredAt =
+        new Date(
+          `${assignment.attendanceDate}T00:00:00`
+        );
+
+      if (isNaN(registeredAt.getTime())) {
+
+        throw new Error(
+          'Invalid attendance date'
+        );
+
+      }
+
+      await this.attendanceService.assignManualReward(
+        course.id,
+        assignment.student.uid,
+        user.uid,
+        registeredAt
+      );
+
+      this.rewardCourse.set(null);
+
+      this.students.set([]);
+
+    } catch (error) {
+
+      console.error(
+        'Error asignando sobre:',
+        error
+      );
+
+      this.assignError.set(
+        'No fue posible asignar el sobre. Inténtalo nuevamente.'
+      );
+
+    } finally {
+
+      this.assigningReward.set(false);
+
+    }
+
+  }
+
+  closeAssignReward() {
+
+    this.rewardCourse.set(null);
+
+    this.students.set([]);
+
+    this.assignError.set('');
+
+  }
 
   /**
    * RQ07 — Cierra la sesión de Firebase Authentication

@@ -9,7 +9,9 @@
             [actionText]="actionText()"
             (action)="action.emit($event)"
             [secondaryActionText]="secondaryActionText()"
-            (secondaryAction)="secondaryAction.emit($event)">
+            (secondaryAction)="secondaryAction.emit($event)"
+            [tertiaryActionText]="tertiaryActionText()"
+            (tertiaryAction)="tertiaryAction.emit($event)">
         </app-course-card>
 
     }

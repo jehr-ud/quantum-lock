@@ -9,6 +9,7 @@ import {
   buildStudentSummaryRows,
   computeRewardCounts,
   countDistinctStudents,
+  filterStudents,
   formatExportDate,
   getColombiaTimeParts,
   isSessionUsable,
@@ -16,6 +17,9 @@ import {
   minutesOfDay,
   AttendanceExportRow
 } from './domain';
+
+import { User } from '../../models/user';
+import { UserRole } from '../enums/user-role';
 
 function attendance(
   overrides: Partial<Attendance>
@@ -730,6 +734,170 @@ describe('buildStudentReportRows', () => {
     expect(rows[0].fecha).toBe('01/09/2026 09:00');
 
     expect(rows[1].fecha).toBe('02/09/2026 09:00');
+
+  });
+
+});
+
+describe('filterStudents', () => {
+
+  const students: User[] = [
+    {
+      uid: 'a',
+      email: 'ana@udistrital.edu.co',
+      firstName: 'Ana',
+      lastName: 'García',
+      role: UserRole.STUDENT,
+      avatar: 1,
+      createdAt: timestamp(new Date(2026, 8, 1)) as any,
+      lastLogin: timestamp(new Date(2026, 8, 1)) as any
+    },
+    {
+      uid: 'b',
+      email: 'luis@example.com',
+      firstName: 'Luis',
+      lastName: 'Pérez',
+      role: UserRole.STUDENT,
+      avatar: 2,
+      createdAt: timestamp(new Date(2026, 8, 1)) as any,
+      lastLogin: timestamp(new Date(2026, 8, 1)) as any
+    }
+  ];
+
+  it('devuelve todos los estudiantes sin término de búsqueda', () => {
+
+    expect(
+      filterStudents(students, '')
+    ).toEqual(students);
+
+  });
+
+  it('filtra por nombre', () => {
+
+    const result =
+      filterStudents(students, 'ana');
+
+    expect(result).toHaveLength(1);
+
+    expect(result[0].uid).toBe('a');
+
+  });
+
+  it('filtra por correo electrónico', () => {
+
+    const result =
+      filterStudents(students, 'example.com');
+
+    expect(result).toHaveLength(1);
+
+    expect(result[0].uid).toBe('b');
+
+  });
+
+  it('ignora mayúsculas y espacios', () => {
+
+    const result =
+      filterStudents(students, '  LUIS ');
+
+    expect(result).toHaveLength(1);
+
+    expect(result[0].uid).toBe('b');
+
+  });
+
+  it('devuelve vacío cuando no hay coincidencias', () => {
+
+    expect(
+      filterStudents(students, 'zzz')
+    ).toEqual([]);
+
+  });
+
+});
+
+describe('RQ10 — sobre manual', () => {
+
+  it('cuenta el sobre manual en el resumen por estudiante', () => {
+
+    const record = attendance({
+      studentUid: 'a',
+      sessionId: 'manual_1',
+      manual: true,
+      solved: true,
+      rewardClaimed: true,
+      rewardId: 'sp-001'
+    });
+
+    const rows =
+      buildStudentSummaryRows(
+        [record],
+        {
+          a: {
+            firstName: 'Ana',
+            lastName: 'García',
+            email: 'agarcia@udistrital.edu.co'
+          }
+        }
+      );
+
+    expect(rows[0].sobres).toBe(1);
+
+  });
+
+  it('marca el sobre manual como abierto en la exportación', () => {
+
+    const record = attendance({
+      studentUid: 'a',
+      sessionId: 'manual_1',
+      manual: true,
+      solved: true,
+      rewardClaimed: true,
+      rewardId: 'sp-001',
+      registeredAt: timestamp(
+        new Date(2026, 8, 1, 9, 0)
+      ) as any
+    });
+
+    const rows: AttendanceExportRow[] =
+      buildExportRows(
+        [record],
+        {
+          a: {
+            firstName: 'Ana',
+            lastName: 'García',
+            email: 'agarcia@udistrital.edu.co'
+          }
+        }
+      );
+
+    expect(rows[0].abrioSobre).toBe('Sí');
+
+    expect(rows[0].estudiante).toBe('Ana García');
+
+  });
+
+  it('reporta el sobre manual como Resolvió con una carta en el PDF', () => {
+
+    const record = attendance({
+      studentUid: 'a',
+      sessionId: 'manual_1',
+      manual: true,
+      solved: true,
+      rewardClaimed: true,
+      rewardId: 'sp-001',
+      registeredAt: timestamp(
+        new Date(2026, 8, 1, 9, 0)
+      ) as any
+    });
+
+    const rows =
+      buildStudentReportRows([record]);
+
+    expect(rows[0]).toEqual({
+      fecha: '01/09/2026 09:00',
+      estado: 'Resolvió',
+      cartas: 1
+    });
 
   });
 
