@@ -2,16 +2,22 @@
 
 ## Objective
 
-Implement course schedules using the existing seeders and use those schedules to determine when a Student can register attendance.
+Implement course schedules using the existing seeders and use those schedules for the attendance (asistencia) registration flow.
 
 The Teacher must NOT configure course schedules through the application.
 
-Attendance must be registered when the Student clicks `Comenzar`, provided that:
+Attendance is registered in two places:
 
-1. The Student is authenticated.
-2. The Student has access to the selected course.
-3. The Teacher session is active.
-4. The current Colombia date/time is inside the scheduled time range of the course.
+1. **Automatically** when the Student clicks `Comenzar`, provided that:
+   1. The Student is authenticated.
+   2. The Student has access to the selected course.
+   3. The Teacher session is active.
+
+2. **From the album attendance button (repuesto)**, per course, which appears when:
+   1. The current Colombia date/time is inside the scheduled time range of the course, AND
+   2. There is no active Teacher session for the course (the session already closed).
+
+The **course schedule is no longer a requirement to start the reto** (`Comenzar`). This avoids blocking students who begin the challenge outside the scheduled window. The schedule restriction applies to the album attendance button instead.
 
 Successful Quantum Lock completion is a separate event.
 
@@ -58,13 +64,17 @@ Course schedules are defined only in the seed data. The seeder writes the schedu
 
 Attendance is stored in the existing `attendances` collection with the existing composite document id `${sessionId}_${studentUid}`.
 
-When the Student clicks `Comenzar` on an eligible course, the application creates the attendance document with `solved: false`, `attempts: 0` and `rewardClaimed: false` before the Quantum Lock becomes interactive.
+When the Student clicks `Comenzar` on an eligible course, the application creates the attendance document with `solved: false`, `attempts: 0` and `rewardClaimed: false` before the Quantum Lock becomes interactive. The schedule is **not** validated at this point.
 
 If the document already exists (Student accesses again), it is not recreated and the existing record is preserved.
 
+The album attendance button does **not** reuse the active-session `attend` operation (the session is already closed). Instead it registers the attendance manually against the **latest session** of the course, creating `attendances/{latestSessionId}_{studentUid}` only if it does not exist (idempotent: never creates a duplicate). The record is created with `solved: true` and `rewardClaimed: false`, so it counts as a resolved reto (report "Resolvió") but does **not** grant or open an envelope ("Abrió sobre = No"). It uses the same student-write shape as the normal flow, plus the marker `manualAttendance: true` so the Teacher export can indicate that the student added the attendance manually. It does **not** use the `manual` marker (Teacher-only per RQ10), so no new security rule is required.
+
 ### Out of schedule state
 
-When the current Colombia time is outside the course schedule, the Student sees the existing "La sesión aún no ha comenzado" screen with an additional message indicating that the Student is not within the class schedule. Validating the schedule is a normal application state: no attendance is registered, no lock is initialized, and no unhandled Firebase error is produced.
+Starting the reto is **not** restricted by the course schedule. The schedule only gates the album attendance button.
+
+When the current Colombia time is outside the course schedule, the album per-course view hides the attendance button (a normal application state: no message is required, no Firebase error is produced). When the Student is inside the schedule but a Teacher session is still active, the button is also hidden: the attendance must be registered through `Comenzar` for the active session. When the session has already closed and the Student is inside the schedule, the button is shown; pressing it registers the manual attendance against the latest session of the course.
 
 ---
 
@@ -74,11 +84,11 @@ The following events are independent:
 
 ### Attendance
 
-Registered when the Student clicks `Comenzar` during a valid scheduled course period and an active Teacher session.
+Registered when the Student clicks `Comenzar` with an active Teacher session (no schedule requirement), or from the album attendance button when the Teacher session has already closed and the Student is within the course schedule.
 
 ### Quantum Lock
 
-Determines whether the Student successfully completes the challenge.
+Determines whether the Student successfully completes the challenge. Starting or solving it is not restricted by the course schedule.
 
 ### Envelope
 
@@ -87,8 +97,6 @@ Granted/opened only after successful Quantum Lock completion according to the ex
 Therefore:
 
 ```text
-Valid schedule
-+
 Active Teacher session
 +
 Student clicks "Comenzar"
@@ -114,6 +122,24 @@ Quantum Lock starts
             Existing reward flow
 ```
 
+Attendance repuesto (album):
+
+```text
+Within course schedule
++
+No active Teacher session (session closed)
+        ↓
+Album shows "Llenar asistencia manualmente" button
+        ↓
+Student clicks it
+        ↓
+AttendanceService.registerManualAttendance(latest session, uid)
+creates attendances/{latestSessionId}_{uid} if it does not exist
+(idempotent; solved: true, rewardClaimed: false, manualAttendance: true;
+no envelope). The Teacher export marks these rows in the
+"Asistencia manual" column.
+```
+
 ---
 
 ## Implementation Reference
@@ -122,7 +148,9 @@ Quantum Lock starts
 - Course model with schedule: `src/app/models/course.ts`.
 - Seed data with schedules: `src/app/core/seeds/seed.data.ts` and `src/app/core/seeds/seed.service.ts`.
 - Attendance on `Comenzar`: `src/app/core/services/attendance.service.ts` (`attend`).
-- Student session flow and out-of-schedule state: `src/app/features/student/pages/session/session.ts` and `session.html`.
+- Manual attendance (album repuesto): `src/app/core/services/attendance.service.ts` (`registerManualAttendance`) and `src/app/core/services/class-session.service.ts` (`getLatestSession`).
+- Student session flow (no schedule gate): `src/app/features/student/pages/session/session.ts` and `session.html`.
+- Album attendance button (repuesto): `src/app/features/student/pages/album/album.ts` and `album.html`.
 
 Unit tests: `src/app/core/utils/domain.spec.ts`.
 

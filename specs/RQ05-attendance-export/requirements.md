@@ -70,8 +70,11 @@ The quantity shall count every attendance record of the course in which the stud
 | Estudiante | Student full name |
 | Correo | Student institutional email |
 | Abrió sobre | Whether the student successfully opened the reward envelope |
+| Asistencia manual | Whether the student self-registered the attendance manually from the album (RQ09), `Sí` or `No` |
 
 The `Abrió sobre` value shall clearly distinguish successful and unsuccessful cases, for example `Sí` and `No`.
+
+The `Asistencia manual` value distinguishes attendance records the student registered manually after the course session closed (album "Llenar asistencia manualmente" button, flagged `manualAttendance: true`) from records created by the automatic `Comenzar` flow. Teacher-assigned manual envelopes (`manual: true`) are not flagged by this column. Values are `Sí` or `No`.
 
 ## Business Rules
 
@@ -82,6 +85,7 @@ The `Abrió sobre` value shall clearly distinguish successful and unsuccessful c
 5. Duplicate Quantum Lock attempts do not create duplicate attendance rows.
 6. The report must not include attendance from other courses.
 7. The consolidated sheet counts every opened reward envelope per student, including duplicate cards, using the existing reward/envelope state (`rewardClaimed`).
+8. The `Asistencia manual` column reflects the student self-registered manual attendance marker (`manualAttendance === true`); teacher-assigned manual envelopes (`manual`) do not set this marker, since the Firestore rules restrict `manual` writes to Teachers.
 
 ## Acceptance Criteria
 

@@ -408,7 +408,8 @@ describe('buildExportRows', () => {
       fecha: '01/09/2026 09:00',
       estudiante: 'Ana García',
       correo: 'agarcia@udistrital.edu.co',
-      abrioSobre: 'Sí'
+      abrioSobre: 'Sí',
+      asistenciaManual: 'No'
     });
 
   });
@@ -426,6 +427,27 @@ describe('buildExportRows', () => {
 
     const rows =
       buildExportRows([failed], users);
+
+    expect(rows[0].abrioSobre).toBe('No');
+
+  });
+
+  it('marca Sí la asistencia registrada manualmente por el estudiante', () => {
+
+    const manual = attendance({
+      studentUid: 'b',
+      solved: true,
+      rewardClaimed: false,
+      manualAttendance: true,
+      registeredAt: timestamp(
+        new Date(2026, 8, 1, 9, 0)
+      ) as any
+    });
+
+    const rows =
+      buildExportRows([manual], users);
+
+    expect(rows[0].asistenciaManual).toBe('Sí');
 
     expect(rows[0].abrioSobre).toBe('No');
 

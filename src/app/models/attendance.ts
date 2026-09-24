@@ -12,4 +12,5 @@ export interface Attendance {
     attempts: number;
     teacherUid?: string;
     manual?: boolean;
+    manualAttendance?: boolean;
 }

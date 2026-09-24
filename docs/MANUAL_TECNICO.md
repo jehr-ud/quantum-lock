@@ -39,14 +39,16 @@ La aplicación se compone de dos roles principales:
 
 La aplicación se enmarca en un contexto universitario. Los estudiantes utilizan el sistema durante el horario de clase de una materia: el profesor inicia una sesión activa con una duración determinada y los estudiantes deben resolver un patrón de agujas giratorias (Quantum Lock) dentro del tiempo disponible.
 
-La participación en la clase (asistencia) queda registrada desde el momento en que el estudiante ingresa a la sesión durante el horario válido de la materia y existe una sesión activa iniciada por el profesor. La resolución correcta del Quantum Lock es un logro adicional que da acceso a un sobre con una carta de recompensa coleccionable.
+La participación en la clase (asistencia) queda registrada desde el momento en que el estudiante ingresa a la sesión y existe una sesión activa iniciada por el profesor. La resolución correcta del Quantum Lock es un logro adicional que da acceso a un sobre con una carta de recompensa coleccionable.
+
+> **RQ09 (modificado):** el horario de la materia ya **no** bloquea el inicio del reto («Comenzar»). El horario se usa en el álbum para el botón de asistencia (repuesto), que aparece cuando el estudiante está dentro del horario de la materia y la sesión del maestro ya se cerró.
 
 ### 3.2 Problema que aborda
 
 El sistema busca:
 
 1. Digitalizar el control de asistencia a clase mediante un mecanismo interactivo y gamificado.
-2. Garantizar que un estudiante solo pueda participar cuando la sesión está activa y dentro del horario de la materia.
+2. Garantizar que un estudiante solo pueda iniciar el reto mientras exista una sesión activa; la asistencia (repuesto) mediante el álbum aplica la validación del horario de la materia cuando la sesión ya se cerró.
 3. Motivar la participación mediante una colección de 50 cartas coleccionables con duplicados válidos.
 4. Permitir al profesor descargar reportes de asistencia por curso y al estudiante descargar un reporte PDF de su participación por materia.
 
@@ -94,7 +96,7 @@ El alcance actual del sistema (basado exclusivamente en el código existente) co
 - Registro de cuenta e inicio de sesión con correo institucional.
 - Panel principal con la lista de materias.
 - Acceso a la sesión mediante el botón **Comenzar**.
-- Validación de horario de la materia (zona horaria de Colombia).
+- Inicio del reto sin validación de horario; horario aplicado al botón de asistencia (repuesto) del álbum cuando la sesión ya se cerró.
 - Registro automático de asistencia al ingresar a la sesión activa.
 - Interacción con el Quantum Lock (rotación de agujas).
 - Apertura del sobre y obtención de una carta coleccionable.
@@ -474,9 +476,9 @@ Documentos con ID de curso (ej. `1542-301`).
 | `name` | string | Nombre de la materia |
 | `schedule` | `CourseScheduleSlot[]` (opcional) | Bloques horarios semanales (`day` 0–6, `start`, `end` en `HH:mm`) |
 
-- **Quién lee:** `CourseService` (lista en tiempo real), página de sesión del estudiante (horario).
+- **Quién lee:** `CourseService` (lista en tiempo real), álbum del estudiante (botón de asistencia por horario).
 - **Quién escribe:** seeder (`SeedService.seedCourses`).
-- **Funcionalidad:** listado de materias, validación de horario (RQ09).
+- **Funcionalidad:** listado de materias, horario para el botón de asistencia del álbum (RQ09).
 
 ### 13.3 `class-sessions`
 
@@ -514,9 +516,10 @@ Documentos con ID compuesto `${sessionId}_${studentUid}`.
 | `rewardId` | string | ID de la carta (por ejemplo `sp-001`) |
 | `teacherUid` | string (opcional) | Profesor que asignó el sobre (solo RQ10) |
 | `manual` | boolean (opcional) | `true` si el sobre fue asignado manualmente por el profesor (RQ10) |
+| `manualAttendance` | boolean (opcional) | `true` si el estudiante se registró manualmente desde el álbum (RQ09, asistencia repuesto) |
 
 - **Quién lee:** estudiante (sesión, sobre, álbum, reporte), profesor (conteo de conectados, exportación).
-- **Quién escribe:** `AttendanceService` (`attend`, `register`, `registerFailedAttempt`, `claimReward`, `assignManualReward`).
+- **Quién escribe:** `AttendanceService` (`attend`, `register`, `registerFailedAttempt`, `claimReward`, `assignManualReward`, `registerManualAttendance`).
 - **Funcionalidad:** asistencia, intentos, resolución, recompensas, álbum, reportes, estudiantes conectados, asignación manual de sobres.
 - **Regla de unicidad:** un estudiante tiene **una sola** asistencia por sesión (ID compuesto); los reintentos no crean registros duplicados.
 
@@ -642,7 +645,7 @@ Guarda `teacherGuard`. Comportamiento:
    - Consulta `attendances where courseId`.
    - Lee todos los usuarios (`users`) para resolver nombre y correo.
    - `buildExportRows` genera una fila por asistencia: `fecha`, `estudiante`, `correo`, `abrioSobre` (`Sí`/`No` según `rewardClaimed`).
-2. Construye un libro Excel con la librería `xlsx` (hoja `Asistencia`), columnas: **Fecha, Estudiante, Correo, Abrió sobre**.
+2. Construye un libro Excel con la librería `xlsx` (hoja `Asistencia`), columnas: **Fecha, Estudiante, Correo, Abrió sobre, Asistencia manual**.
 3. Descarga el archivo `asistencia-{codigo}.xlsx`.
 
 ### 15.6 Cierre de sesión
@@ -672,17 +675,17 @@ Guarda `teacherGuard`. Comportamiento:
 El estudiante elige la materia en el dashboard y presiona **Comenzar**. Al cargar `/student/session/:courseId`:
 
 1. `findActiveSession(courseId)` busca la sesión activa más reciente de la materia.
-2. `resolveCourse` obtiene el curso (de la señal o esperando el primer valor de `courses$`).
-3. `isWithinSchedule(course.schedule, now)` valida el horario en hora de Colombia (`America/Bogota`).
+2. Con sesión activa, se registra la asistencia (`attend`) y se habilita el Quantum Lock. **El horario de la materia ya no se valida en esta pantalla** (RQ09): el estudiante puede iniciar el reto en cualquier momento mientras exista una sesión activa.
 
-### 16.4 Estado «fuera de horario»
+El horario de cada materia se usa en el **álbum** para mostrar el botón de asistencia (repuesto).
 
-Si no hay sesión activa o el horario no corresponde, se muestran pantallas informativas:
+### 16.4 Estados informativos de la sesión
+
+La página de sesión muestra pantallas informativas según la condición:
 
 | Condición | Pantalla |
 |---|---|
 | Sesión no iniciada (`!session()`) | «La sesión aún no ha comenzado. Espera a que el profesor inicie la sesión.» |
-| Fuera del horario de clase | «La sesión aún no ha comenzado… No te encuentras dentro del horario de clase.» (estado `outsideSchedule`) |
 | Sesión ya no disponible | «La sesión ya no está disponible. El tiempo de la sesión terminó o el profesor la cerró.» |
 | Error de carga | «No fue posible cargar la sesión» con botón **Reintentar** |
 
@@ -690,14 +693,30 @@ En estos estados **no** se registra asistencia, **no** se inicializa el Quantum 
 
 ### 16.5 Comenzar / Registro de asistencia
 
-Cuando hay sesión activa **y** el horario es válido, la página de sesión registra automáticamente la asistencia mediante `AttendanceService.attend(session, uid)`:
+Cuando hay sesión activa, la página de sesión registra automáticamente la asistencia mediante `AttendanceService.attend(session, uid)` (sin validación de horario):
 
 - Crea el documento `attendances/{sessionId}_{studentUid}` con `solved: false`, `attempts: 0`, `rewardClaimed: false`.
 - Si el documento ya existe (reingreso), **no lo recrea** (preserva el existente).
 
-> **Precisión sobre RQ09:** la especificación indica que la asistencia se registra al *presionar* «Comenzar». En la implementación actual, «Comenzar» navega a la página de sesión y la asistencia se registra automáticamente al cargar la página cuando existe sesión activa y horario válido, antes de habilitar el Quantum Lock. El resultado efectivo coincide con la regla de negocio.
+> **Precisión sobre RQ09:** la especificación indica que la asistencia se registra al *presionar* «Comenzar». En la implementación actual, «Comenzar» navega a la página de sesión y la asistencia se registra automáticamente al cargar la página cuando existe sesión activa (sin horario), antes de habilitar el Quantum Lock. El resultado efectivo coincide con la regla de negocio.
 
-### 16.6 Sesión / Quantum Lock
+### 16.6 Botón de asistencia en el álbum (repuesto, RQ09)
+
+En `/student/album/:courseId` se muestra un botón **Llenar asistencia manualmente** en el encabezado, junto a «Descargar reporte», cuando:
+
+1. La hora actual en Colombia está dentro del horario del curso (`isWithinSchedule`), **y**
+2. No existe una sesión activa de la materia (`findActiveSession` → `null`; la sesión ya se cerró).
+
+Al pulsarlo:
+
+- Busca la **última sesión** de la materia (`classSessionService.getLatestSession`).
+- Si el curso no tiene ninguna sesión previa, muestra el mensaje claro «No hay una sesión previa para registrar tu asistencia.» (estado normal, sin error Firebase).
+- Si existe, llama a `AttendanceService.registerManualAttendance(session, uid)`, que crea `attendances/{latestSessionId}_{uid}` **solo si no existe** (idempotente: nunca crea duplicados) con `solved: true`, `rewardClaimed: false` y `manualAttendance: true`. No otorga ni abre sobre: el reporte muestra «Resolvió» y la exportación «Abrió sobre = No». Usa la misma forma de escritura que el flujo normal del estudiante (no usa el marcador `manual` de RQ10, restringido a TEACHER por reglas), por lo que no requiere reglas Firestore nuevas. En el Excel del profesor estos registros se marcan en la columna **Asistencia manual = Sí**.
+- Si el estudiante ya tenía asistencia para esa sesión, muestra «Ya tenías asistencia registrada en esta sesión.» (sin duplicar ni sobrescribir).
+
+La condición de horario es un estado normal de la aplicación: si no se cumple (o la sesión sigue activa), el botón simplemente no aparece.
+
+### 16.7 Sesión / Quantum Lock
 
 - Tras registrar asistencia (`attended = true`), el Quantum Lock queda **interactivo** (`interactive()`).
 - Se inicia un temporizador con el tiempo restante de la sesión.
@@ -706,13 +725,13 @@ Cuando hay sesión activa **y** el horario es válido, la página de sesión reg
 - `AttendanceService.register` actualiza la asistencia con `solved: true` y asigna `rewardId` aleatorio.
 - Navega a `/student/envelope/:courseId`.
 
-### 16.7 Intento fallido
+### 16.8 Intento fallido
 
 La UI declara el manejador `failed()` ligado al evento `(failed)` del componente Quantum Lock para registrar el intento fallido (`registerFailedAttempt` → `attempts + 1`).
 
 > **Hallazgo (RQ09 / AGENTS.md):** el componente `QuantumLock` **nunca emite el evento `failed`** (solo emite `solved`). En consecuencia, `registerFailedAttempt` no llega a ejecutarse en el flujo actual: los intentos fallidos **no incrementan el campo `attempts`** ni muestran el mensaje «El patrón no coincide.». Esto es una **desviación parcial** respecto a RQ09 (que exige `attempts + 1` en fallo).
 
-### 16.8 Sobre (`/student/envelope/:courseId`)
+### 16.9 Sobre (`/student/envelope/:courseId`)
 
 1. Busca la última sesión del curso (`getLatestSession`).
 2. Busca la asistencia del estudiante para esa sesión.
@@ -721,13 +740,14 @@ La UI declara el manejador `failed()` ligado al evento `(failed)` del componente
 5. Si `rewardClaimed === true` muestra «¡Recompensa obtenida!»; si no, muestra el botón **Abrir sobre**.
 6. `open()` → `claimReward` marca `rewardClaimed: true` y muestra la carta obtenida con el componente `RewardCard`.
 
-### 16.9 Álbum (`/student/album/:courseId`)
+### 16.10 Álbum (`/student/album/:courseId`)
 
 - `AttendanceService.getStudentRewardCounts(uid, courseId)` consulta `attendances where studentUid AND courseId` y calcula `computeRewardCounts` (solo cuenta asistencias con `rewardClaimed === true` y `rewardId`).
 - Muestra las 50 cartas con cantidad `xN`, cartas bloqueadas (`?`), progreso (`X / 50`, porcentaje), total de recompensas obtenidas (con duplicados) y desglose por rareza.
 - Botón **Descargar reporte** → PDF del reporte por curso (ver sección Reportes).
+- Botón de asistencia (repuesto, RQ09): ver sección 16.6.
 
-### 16.10 Cierre de sesión
+### 16.11 Cierre de sesión
 
 Igual que el profesor, mediante `CourseHeader` → `AuthService.signOut()` → `/login`. No modifica datos.
 
@@ -792,8 +812,6 @@ Materia
    ↓
 Sesión activa del profesor
    ↓
-Validación de horario
-   ↓
 Comenzar
    ↓
 Asistencia registrada (solved: false, attempts: 0, rewardClaimed: false)
@@ -801,11 +819,15 @@ Asistencia registrada (solved: false, attempts: 0, rewardClaimed: false)
 Quantum Lock
    ├── Éxito → attendances actualizado (solved: true + rewardId) → sobre → recompensa
    └── Fracaso → la asistencia se conserva; attempts + 1; sin sobre
+
+Repuesto (álbum):
+   Reto completado (solved) + dentro del horario de la materia
+   → botón «Registrar asistencia» → attend(sesión activa, uid) → asistencia registrada
 ```
 
 ### Regla de negocio principal
 
-**La asistencia se registra cuando el estudiante ingresa a la sesión (mediante «Comenzar») dentro del horario válido de la materia y con una sesión del profesor activa.** La resolución exitosa del Quantum Lock **no** es la definición de asistencia.
+**La asistencia se registra cuando el estudiante ingresa a la sesión (mediante «Comenzar») con una sesión del profesor activa.** El horario de la materia **ya no** valida el inicio del reto; se usa en el álbum para el botón de asistencia (repuesto). La resolución exitosa del Quantum Lock **no** es la definición de asistencia.
 
 ### Cómo lo implementa el código actual (`attendance.service.ts` + `session.ts`)
 
@@ -901,7 +923,7 @@ Los horarios provienen **únicamente** de los seeders (`seed.data.ts` + `seed.se
 
 | Concepto | Cuándo ocurre | Marca en datos |
 |---|---|---|
-| **Asistencia** | Ingreso a sesión activa en horario | documento `attendances` creado |
+| **Asistencia** | Ingreso a sesión activa («Comenzar») o botón de asistencia del álbum (repuesto) | documento `attendances` creado |
 | **Quantum Lock resuelto** | Patrón correcto + sesión revalidada | `solved: true`, `rewardId` asignado |
 | **Sobre** | Tras resolver, al abrirlo | `rewardClaimed: true` |
 | **Carta / álbum** | La carta cuenta cuando el sobre se abre | `rewardId` con `rewardClaimed: true` |
@@ -980,6 +1002,7 @@ Redirección a /login
 | `Estudiante` | `users.firstName + lastName` |
 | `Correo` | `users.email` |
 | `Abrió sobre` | `rewardClaimed ? 'Sí' : 'No'` |
+| `Asistencia manual` | `manualAttendance ? 'Sí' : 'No'` (RQ09: el estudiante se registró manualmente desde el álbum; el marcador `manual` de RQ10 no activa esta columna) |
 
 - Reglas: solo asistencias del curso seleccionado; una fila por registro (una fila por sesión/estudiante, sin duplicar); estudiantes que asistieron y fallaron el Quantum Lock aparecen con «Abrió sobre = No».
 - Generación: librería `xlsx` → descarga `asistencia-{codigo}.xlsx`.
@@ -1065,13 +1088,14 @@ Observaciones:
 | **Firestore** | Error al cargar sesión | Pantalla de error con botón **Reintentar** (`loadError`); se registra en consola. |
 | **Firestore** | Error al contar estudiantes conectados | Se muestra `—` y el mensaje «No fue posible cargar el conteo de estudiantes.» (`connectedError`). |
 | **Sesión no disponible (normal)** | Sesión no iniciada / expirada / cerrada | Pantallas informativas «La sesión aún no ha comenzado» / «La sesión ya no está disponible» (`unavailable`/`!session`); **no** se lanza error Firebase no controlado (RQ06). |
-| **Fuera de horario (normal)** | `isWithinSchedule === false` | Pantalla «No te encuentras dentro del horario de clase.» (`outsideSchedule`) sin registro de asistencia (RQ09). |
+| **Fuera de horario (normal)** | `isWithinSchedule === false` | El botón de asistencia del álbum (RQ09) no se muestra; el inicio del reto («Comenzar») **no** valida horario. |
+| **Sin sesión activa (repuesto álbum)** | El estudiante está dentro del horario y la sesión ya se cerró (no hay sesión activa) | El botón «Llenar asistencia manualmente» se muestra; al pulsarlo registra la asistencia contra la última sesión del curso (`registerManualAttendance`, con `manualAttendance: true`) y el Excel del profesor la marca en «Asistencia manual = Sí». Si el curso no tiene sesiones previas: «No hay una sesión previa para registrar tu asistencia.» (estado normal, sin error Firebase). |
 | **Quantum Lock fallido** | Patrón incorrecto | Intención: `failed()` muestra «El patrón no coincide.» y animación; **no operativo** porque el componente no emite `failed` (ver 16.7). |
 | **Configuración** | `settings/application` ausente | `ConfigService.load()` deja `config` en `null`; `createSession` usa 30 s como valor por defecto. |
 | **Red** | `auth/network-request-failed`, desincronización | Mensajes genéricos de reintento; `resolveCurrentUser` espera el re-sync de `currentUser`. |
 | **Entradas inválidas** | Contraseña corta, contraseñas distintas, usuario vacío | Validaciones en `login.ts`, `register.ts`, `recover.ts`. |
 
-Principio de la solución: los estados «sin sesión» y «fuera de horario» son **estados normales** de la aplicación y se manejan por separado de los errores inesperados de Firestore (que sí se registran en consola para desarrollo).
+Principio de la solución: los estados «sin sesión», «fuera de horario» y «sin sesión activa para el repuesto del álbum» son **estados normales** de la aplicación y se manejan por separado de los errores inesperados de Firestore (que sí se registran en consola para desarrollo).
 
 ---
 
@@ -1227,7 +1251,7 @@ Como la app usa rutas de cliente (p. ej. `/student/dashboard`), el rewrite `** �
 |---|---|---|
 | **Firebase 404 o página en blanco al recargar una ruta profunda** | Falta el rewrite de SPA | Verificar que `firebase.json` conserve `"rewrites": [{"source": "**", "destination": "/index.html"}]` y redesplegar. |
 | **«No fue posible cargar la sesión»** | Red, reglas de Firestore o configuración | Revisar la consola del navegador; esperar a que el profesor inicie la sesión; verificar conectividad. |
-| **«La sesión aún no ha comenzado»** | No hay sesión activa o fuera de horario | Es el comportamiento esperado; esperar la sesión o ingresar en el horario de la materia. |
+| **«La sesión aún no ha comenzado»** | No hay sesión activa | Es el comportamiento esperado; esperar a que el profesor inicie la sesión. |
 | **«La sesión ya no está disponible»** | Sesión expiró o el profesor la cerró | No se pierde la asistencia ya registrada; esperar la siguiente sesión. |
 | **Error de permisos Firestore** | Reglas del proyecto no leen/escriben como la app espera | Verificar las reglas en la consola de Firebase; **no** debilitarlas con `allow read, write: if request.auth != null` universal. |
 | **Queries que piden índice** | Faltan índices compuestos en Firestore | Crear los índices solicitados en la consola (p. ej. `class-sessions` `courseId` + `status` + `createdAt desc`). |
@@ -1247,11 +1271,11 @@ Resumen de los requisitos de `specs/` (RQ02–RQ09) y AGENTS.md frente al estado
 | **RQ02** — Estudiantes conectados | Contar estudiantes distintos con asistencia en la sesión del profesor | **IMPLEMENTADO** | `countSessionStudents` + `countDistinctStudents`; vista en `teacher/session`. Errores se muestran como `—`. |
 | **RQ03** — Cartas repetidas | Álbum con duplicados `xN`, cartas únicas y progreso | **IMPLEMENTADO** | `computeRewardCounts`, 50 cartas, `collectedCount` (únicas) y `totalObtained` (con duplicados). |
 | **RQ04** — Recuperación de contraseña | Restablecimiento por correo con Firebase Auth | **IMPLEMENTADO** | `recover` + `sendPasswordResetEmail`; mensajes amigables. |
-| **RQ05** — Exportación de asistencia | Excel por curso (Fecha, Estudiante, Correo, Abrió sobre) | **IMPLEMENTADO** | `xlsx`; una fila por registro; `abrioSobre` Sí/No según `rewardClaimed`. |
+| **RQ05** — Exportación de asistencia | Excel por curso (Fecha, Estudiante, Correo, Abrió sobre, Asistencia manual) | **IMPLEMENTADO** | `xlsx`; una fila por registro; `abrioSobre` Sí/No según `rewardClaimed`; `asistenciaManual` Sí/No según `manualAttendance` (RQ09). |
 | **RQ06** — Condición de carrera de sesión | El estudiante no interactúa con una sesión no disponible | **IMPLEMENTADO** | `isSessionUsable`, `watchSessionStatus`, `refreshActiveSession` previa a resolución. |
 | **RQ07** — Logout | Cerrar sesión para Teacher y Student con signOut | **IMPLEMENTADO** | `CourseHeader` opcional en ambos dashboards; signOut + redirección; protección de doble clic y manejo de errores. |
 | **RQ08** — Reporte por curso del estudiante (PDF) | PDF con fecha, estado, cartas y total | **IMPLEMENTADO** | `getStudentCourseReport` + jsPDF/autotable desde el álbum. |
-| **RQ09** — Horario sembrado y asistencia | Asistencia al «Comenzar» con horario y sesión activa | **PARCIALMENTE IMPLEMENTADO** | Validación de horario y registro de asistencia implementados; **el registro de intentos fallidos (`attempts+1`) no funciona** porque el componente no emite `failed`. |
+| **RQ09** — Horario sembrado y asistencia | Asistencia al «Comenzar» con sesión activa (sin horario) + botón de asistencia (repuesto) en el álbum con horario | **PARCIALMENTE IMPLEMENTADO** | Inicio del reto sin validación de horario; botón de asistencia en el álbum (horario + sesión cerrada) que registra contra la última sesión; **el registro de intentos fallidos (`attempts+1`) no funciona** porque el componente no emite `failed`. |
 | **AGENTS.md** — `/dev` solo profesor | Acceso restringido a TEACHER | **PENDIENTE** | El `teacherGuard` de `/dev` está comentado en `app.routes.ts`. |
 | **AGENTS.md** — No debilitar reglas | Reglas de Firestore firmes y versionadas | **PARCIAL** | No hay `firestore.rules` en el repositorio; se gestionan en consola. No verificable desde el código. |
 | **AGENTS.md** — Los intentos fallidos siguen siendo participación | Un fallo debe contabilizarse | **PARCIAL** | La asistencia se registra al ingresar (ok), pero el intento fallido no se incrementa (ver RQ09). |

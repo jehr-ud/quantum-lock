@@ -11,29 +11,16 @@ import {
   Router
 } from '@angular/router';
 
-import {
-  filter,
-  firstValueFrom,
-  map,
-  take
-} from 'rxjs';
-
-import {
-  toObservable
-} from '@angular/core/rxjs-interop';
-
 import { Timestamp } from 'firebase/firestore';
 
 import { QuantumLock } from '../../../../shared/components/quantum/quantum-lock/quantum-lock';
 import { ClassSession } from '../../../../models/class-session';
-import { Course } from '../../../../models/course';
 import { User } from '../../../../models/user';
 import { ClassSessionService } from '../../../../core/services/class-session.service';
 import { AttendanceService } from '../../../../core/services/attendance.service';
-import { CourseService } from '../../../../core/services/course.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { ConfigService } from '../../../../core/services/config.service';
-import { isSessionUsable, isWithinSchedule } from '../../../../core/utils/domain';
+import { isSessionUsable } from '../../../../core/utils/domain';
 
 @Component({
   selector: 'app-student-session',
@@ -63,16 +50,8 @@ export class Session implements OnDestroy {
   private readonly attendanceService =
     inject(AttendanceService);
 
-  private readonly courseService =
-    inject(CourseService);
-
   private readonly config =
     inject(ConfigService);
-
-  private readonly courses$ =
-    toObservable(
-      this.courseService.courses
-    );
 
   readonly loading =
     signal(true);
@@ -87,12 +66,6 @@ export class Session implements OnDestroy {
   readonly loadError = signal('');
 
   readonly unavailable = signal(false);
-
-  /**
-   * RQ09 — La fecha/hora actual en Colombia está fuera
-   * del horario de clase del curso.
-   */
-  readonly outsideSchedule = signal(false);
 
   readonly attended = signal(false);
 
@@ -153,12 +126,6 @@ export class Session implements OnDestroy {
   readonly interactive = computed(() => {
 
     if (this.unavailable()) {
-
-      return false;
-
-    }
-
-    if (this.outsideSchedule()) {
 
       return false;
 
@@ -244,8 +211,6 @@ export class Session implements OnDestroy {
 
     this.error.set('');
 
-    this.outsideSchedule.set(false);
-
     this.attended.set(false);
 
     this.attempts.set(0);
@@ -258,23 +223,6 @@ export class Session implements OnDestroy {
       this.session.set(session);
 
       if (session) {
-
-        const course =
-          await this.resolveCourse(session.courseId);
-
-        const withinSchedule =
-          isWithinSchedule(
-            course?.schedule,
-            Date.now()
-          );
-
-        if (!withinSchedule) {
-
-          this.outsideSchedule.set(true);
-
-          return;
-
-        }
 
         await this.registerAttendance(session);
 
@@ -328,40 +276,6 @@ export class Session implements OnDestroy {
   retry() {
 
     this.load();
-
-  }
-
-  /**
-   * RQ09 — Resuelve el curso de la sesión. Si la lista
-   * de cursos aún no se ha cargado, espera a que la
-   * información esté disponible para decidir sobre el
-   * horario de clase.
-   */
-  private async resolveCourse(
-    courseId: string
-  ): Promise<Course | undefined> {
-
-    const existing =
-      this.courseService.courses()
-        .find(course => course.id === courseId);
-
-    if (existing) {
-
-      return existing;
-
-    }
-
-    return firstValueFrom(
-      this.courses$.pipe(
-        filter(courses => courses.length > 0),
-        map(courses =>
-          courses.find(course =>
-            course.id === courseId
-          )
-        ),
-        take(1)
-      )
-    );
 
   }
 

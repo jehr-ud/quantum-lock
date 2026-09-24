@@ -8,6 +8,7 @@ export interface AttendanceExportRow {
   estudiante: string;
   correo: string;
   abrioSobre: 'Sí' | 'No';
+  asistenciaManual: 'Sí' | 'No';
 }
 
 /**
@@ -296,7 +297,11 @@ export function buildExportRows(
         correo: user?.email ?? '',
         abrioSobre: attendance.rewardClaimed
           ? 'Sí'
-          : 'No'
+          : 'No',
+        asistenciaManual:
+          attendance.manualAttendance
+            ? 'Sí'
+            : 'No'
       };
 
       return row;

@@ -327,6 +327,7 @@ export class Dashboard {
       estudiante: string;
       correo: string;
       abrioSobre: string;
+      asistenciaManual: string;
     }[],
     summary: {
       nombre: string;
@@ -340,14 +341,16 @@ export class Dashboard {
       'Fecha',
       'Estudiante',
       'Correo',
-      'Abrió sobre'
+      'Abrió sobre',
+      'Asistencia manual'
     ];
 
     const rowData = rows.map(row => [
       row.fecha,
       row.estudiante,
       row.correo,
-      row.abrioSobre
+      row.abrioSobre,
+      row.asistenciaManual
     ]);
 
     const worksheet =
@@ -360,7 +363,8 @@ export class Dashboard {
       { wch: 18 },
       { wch: 34 },
       { wch: 34 },
-      { wch: 12 }
+      { wch: 12 },
+      { wch: 14 }
     ];
 
     const summaryHeader = [

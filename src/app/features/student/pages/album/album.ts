@@ -13,12 +13,16 @@ import {
 import { AuthService } from '../../../../core/services/auth.service';
 import { AttendanceService } from '../../../../core/services/attendance.service';
 import { CourseService } from '../../../../core/services/course.service';
+import { ClassSessionService } from '../../../../core/services/class-session.service';
 
 import { REWARD_CARDS } from '../../../../shared/data/reward-cards';
 
 import { RewardRarity } from '../../../../core/enums/reward-rarity';
 
-import { StudentReportRow } from '../../../../core/utils/domain';
+import {
+  isWithinSchedule,
+  StudentReportRow
+} from '../../../../core/utils/domain';
 
 @Component({
   selector: 'app-album',
@@ -43,6 +47,26 @@ export class Album {
 
   private readonly courseService =
     inject(CourseService);
+
+  private readonly sessionService =
+    inject(ClassSessionService);
+
+  readonly course =
+    computed(() => {
+
+      const courseId =
+        this.courseId;
+
+      if (!courseId) {
+
+        return undefined;
+
+      }
+
+      return this.courseService.courses()
+        .find(item => item.id === courseId);
+
+    });
 
   readonly courseName =
     computed(() => {
@@ -69,6 +93,30 @@ export class Album {
    */
   readonly reporting = signal(false);
   readonly reportError = signal('');
+
+  /**
+   * RQ09 — Botón de asistencia (repuesto) en el álbum:
+   * aparece cuando la hora actual está dentro del horario
+   * de la materia y ya no existe una sesión del maestro
+   * activa (la sesión se cerró).
+   */
+  readonly sessionActive = signal(false);
+  readonly attendanceRegistering = signal(false);
+  readonly attendanceMessage = signal('');
+  readonly attendanceError = signal('');
+
+  readonly withinSchedule = computed(() =>
+    isWithinSchedule(
+      this.course()?.schedule,
+      Date.now()
+    )
+  );
+
+  readonly showAttendanceButton = computed(() =>
+    Boolean(this.courseId) &&
+    this.withinSchedule() &&
+    !this.sessionActive()
+  );
 
   readonly loading =
     signal(true);
@@ -238,9 +286,18 @@ export class Album {
             this.courseId!
           );
 
-
       this.rewardCounts.set(
         counts
+      );
+
+      const activeSession =
+        await this.sessionService
+          .findActiveSession(
+            this.courseId!
+          );
+
+      this.sessionActive.set(
+        activeSession !== null
       );
 
     } catch (error) {
@@ -257,6 +314,88 @@ export class Album {
     } finally {
 
       this.loading.set(false);
+
+    }
+
+  }
+
+  /**
+   * RQ09 — Botón de asistencia del álbum (repuesto).
+   * Registra manualmente la asistencia del estudiante en
+   * la última sesión del curso cuando la sesión del
+   * maestro ya se cerró y el estudiante se encuentra
+   * dentro del horario de la materia. No otorga carta.
+   */
+  async registerAttendance() {
+
+    if (this.attendanceRegistering()) {
+
+      return;
+
+    }
+
+    const user =
+      this.auth.currentUser();
+
+    if (!user || !this.courseId) {
+
+      this.attendanceError.set(
+        'No es posible registrar la asistencia en este momento.'
+      );
+
+      return;
+
+    }
+
+    this.attendanceRegistering.set(true);
+
+    this.attendanceMessage.set('');
+
+    this.attendanceError.set('');
+
+    try {
+
+      const session =
+        await this.sessionService
+          .getLatestSession(this.courseId);
+
+      if (!session) {
+
+        this.attendanceError.set(
+          'No hay una sesión previa para registrar tu asistencia.'
+        );
+
+        return;
+
+      }
+
+      const created =
+        await this.attendanceService
+          .registerManualAttendance(
+            session,
+            user.uid
+          );
+
+      this.attendanceMessage.set(
+        created
+          ? 'Tu asistencia fue registrada manualmente.'
+          : 'Ya tenías asistencia registrada en esta sesión.'
+      );
+
+    } catch (error) {
+
+      console.error(
+        'Error registrando asistencia desde el álbum:',
+        error
+      );
+
+      this.attendanceError.set(
+        'No fue posible registrar tu asistencia. Inténtalo nuevamente.'
+      );
+
+    } finally {
+
+      this.attendanceRegistering.set(false);
 
     }
 

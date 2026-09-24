@@ -86,6 +86,65 @@ export class AttendanceService {
   }
 
   /**
+   * RQ09 — Registro manual (repuesto) de asistencia desde
+   * el álbum cuando la sesión del maestro ya se cerró y el
+   * estudiante se encuentra dentro del horario de la
+   * materia. Crea el documento contra la última sesión del
+   * curso si no existe (idempotente: nunca crea duplicados).
+   * Marca el reto como resuelto sin abrir sobre, por lo que
+   * el reporte muestra "Resolvió" y la exportación
+   * "Abrió sobre = No".
+   */
+  async registerManualAttendance(
+    session: ClassSession,
+    studentUid: string
+  ): Promise<boolean> {
+
+    const id =
+      `${session.id}_${studentUid}`;
+
+    const ref = doc(
+      firestore,
+      Collections.ATTENDANCES,
+      id
+    );
+
+    const snapshot =
+      await getDoc(ref);
+
+    if (snapshot.exists()) {
+
+      return false;
+
+    }
+
+    await setDoc(ref, {
+
+      id,
+
+      sessionId: session.id,
+
+      courseId: session.courseId,
+
+      studentUid,
+
+      registeredAt: serverTimestamp(),
+
+      attempts: 0,
+
+      solved: true,
+
+      rewardClaimed: false,
+
+      manualAttendance: true
+
+    });
+
+    return true;
+
+  }
+
+  /**
    * RQ02 — Observa en tiempo real el número de
    * estudiantes distintos que registraron asistencia
    * en la sesión actual.

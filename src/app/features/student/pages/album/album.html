@@ -67,6 +67,36 @@
 
         <div class="header-actions">
 
+            @if(showAttendanceButton()){
+
+            <button
+                type="button"
+                class="attend"
+                (click)="registerAttendance()"
+                [disabled]="attendanceRegistering()">
+
+                @if(attendanceRegistering()){
+
+                <span>
+
+                    Registrando...
+
+                </span>
+
+                }@else{
+
+                <span>
+
+                    ✍️ Llenar asistencia manualmente
+
+                </span>
+
+                }
+
+            </button>
+
+            }
+
             <button
                 type="button"
                 class="report"
@@ -110,6 +140,26 @@
     <div class="report-error">
 
         ❌ {{ reportError() }}
+
+    </div>
+
+    }
+
+    @if(attendanceMessage()){
+
+    <div class="attendance-message ok">
+
+        ✔ {{ attendanceMessage() }}
+
+    </div>
+
+    }
+
+    @if(attendanceError()){
+
+    <div class="attendance-message error">
+
+        ❌ {{ attendanceError() }}
 
     </div>
 
